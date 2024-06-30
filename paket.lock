@@ -1,6 +1,42 @@
 STORAGE: NONE
 NUGET
   remote: https://api.nuget.org/v3/index.json
+    FSharp.Core (8.0.300) - restriction: >= netstandard2.0
+    FSharp.Data (6.4)
+      FSharp.Core (>= 6.0.1) - restriction: >= netstandard2.0
+      FSharp.Data.Csv.Core (>= 6.4) - restriction: >= netstandard2.0
+      FSharp.Data.Html.Core (>= 6.4) - restriction: >= netstandard2.0
+      FSharp.Data.Http (>= 6.4) - restriction: >= netstandard2.0
+      FSharp.Data.Json.Core (>= 6.4) - restriction: >= netstandard2.0
+      FSharp.Data.Runtime.Utilities (>= 6.4) - restriction: >= netstandard2.0
+      FSharp.Data.WorldBank.Core (>= 6.4) - restriction: >= netstandard2.0
+      FSharp.Data.Xml.Core (>= 6.4) - restriction: >= netstandard2.0
+    FSharp.Data.Csv.Core (6.4) - restriction: >= netstandard2.0
+      FSharp.Core (>= 6.0.1) - restriction: >= netstandard2.0
+      FSharp.Data.Runtime.Utilities (>= 6.4) - restriction: >= netstandard2.0
+    FSharp.Data.Html.Core (6.4) - restriction: >= netstandard2.0
+      FSharp.Core (>= 6.0.1) - restriction: >= netstandard2.0
+      FSharp.Data.Csv.Core (>= 6.4) - restriction: >= netstandard2.0
+      FSharp.Data.Runtime.Utilities (>= 6.4) - restriction: >= netstandard2.0
+    FSharp.Data.Http (6.4) - restriction: >= netstandard2.0
+      FSharp.Core (>= 6.0.1) - restriction: >= netstandard2.0
+    FSharp.Data.Json.Core (6.4) - restriction: >= netstandard2.0
+      FSharp.Core (>= 6.0.1) - restriction: >= netstandard2.0
+      FSharp.Data.Http (>= 6.4) - restriction: >= netstandard2.0
+      FSharp.Data.Runtime.Utilities (>= 6.4) - restriction: >= netstandard2.0
+    FSharp.Data.Runtime.Utilities (6.4) - restriction: >= netstandard2.0
+      FSharp.Core (>= 6.0.1) - restriction: >= netstandard2.0
+      FSharp.Data.Http (>= 6.4) - restriction: >= netstandard2.0
+    FSharp.Data.WorldBank.Core (6.4) - restriction: >= netstandard2.0
+      FSharp.Core (>= 6.0.1) - restriction: >= netstandard2.0
+      FSharp.Data.Http (>= 6.4) - restriction: >= netstandard2.0
+      FSharp.Data.Json.Core (>= 6.4) - restriction: >= netstandard2.0
+      FSharp.Data.Runtime.Utilities (>= 6.4) - restriction: >= netstandard2.0
+    FSharp.Data.Xml.Core (6.4) - restriction: >= netstandard2.0
+      FSharp.Core (>= 6.0.1) - restriction: >= netstandard2.0
+      FSharp.Data.Http (>= 6.4) - restriction: >= netstandard2.0
+      FSharp.Data.Json.Core (>= 6.4) - restriction: >= netstandard2.0
+      FSharp.Data.Runtime.Utilities (>= 6.4) - restriction: >= netstandard2.0
     Microsoft.Bcl.AsyncInterfaces (8.0) - restriction: >= netstandard2.0
       System.Threading.Tasks.Extensions (>= 4.5.4) - restriction: || (>= net462) (&& (>= netstandard2.0) (< netstandard2.1))
     Microsoft.Extensions.DependencyInjection (8.0) - restriction: >= netstandard2.0
