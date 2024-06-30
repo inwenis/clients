@@ -17,11 +17,6 @@ module Utils =
         let s = p.WaitForSelectorAsync(xpath, opt).Result
         s.ClickAsync().Wait()
 
-    let waitAndClickXpathSyncAlsoWhenElementNotCurrentlyInView (p:IPage) xpath =
-        // also click the element if displaying it requires scrolling the page
-        let s = p.WaitForSelectorAsync(xpath).Result
-        s.ClickAsync().Wait()
-
     let waitForXpathAndType (page:IPage) xpath text =
         let e = page.WaitForSelectorAsync(xpath).Result
         e.TypeAsync(text).Wait()
