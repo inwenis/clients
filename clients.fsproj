@@ -8,6 +8,7 @@
     <Compile Include="Types.fs" />
     <Compile Include="Utils.fs" />
     <Compile Include="Alior.fs" />
+    <Compile Include="Alior.fsx" />
     <Compile Include="Library.fs" />
   </ItemGroup>
   <Import Project=".paket\Paket.Restore.targets" />

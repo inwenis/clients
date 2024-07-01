@@ -6,6 +6,8 @@ open Utils
 open Types
 
 module Alior =
+    open System.IO
+    open System
     type AliorClient() =
         let mutable signedIn = false
         let mutable p : IPage = null
@@ -135,3 +137,82 @@ module Alior =
             sleep 2
 
         member this.GetP() = p
+
+        member this.Scrape() =
+            // click payments
+            waitForSelectorAndClick p """/html/body/div/div/app-ajs-root/div/div[1]/internal/main-header/div/div[2]/div/section/div/div/div[2]/main-navigation/div/nav/ul/li[2]/a/span[1]"""
+            sleep 2
+            // click payment history
+            waitForSelectorAndClick p """/html/body/div/div/app-ajs-root/div/div[1]/internal/main-header/div/div[2]/div/section/div/div/div[2]/main-navigation/div/nav/ul/li[2]/ul/li[2]/a/span"""
+            sleep 2
+            // Click show filters
+            waitForSelectorAndClick p """//*[@id="app-content"]/div[2]/div/payments/div/payment-history/section/div/div/div/history/div/history-header/div/form/div/div/div[1]/div/div/a"""
+            sleep 2
+            // click Period
+            waitForSelectorAndClick p """//*[@id="app-content"]/div[2]/div/payments/div/payment-history/section/div/div/div/history/div/history-header/div/form/div/div/div[2]/history-filters/div/div[1]/div/div/div[3]/history-filter-time/fieldset/div/custom-select/div/div/div/div[1]"""
+            sleep 2
+            // click Last Year
+            waitForSelectorAndClick p """xpath///*[@id="option_time_LAST_YEAR"]"""
+            sleep 2
+
+            // click file type
+            waitForSelectorAndClick p """//*[@id="app-content"]/div[2]/div/payments/div/payment-history/section/div/div/div/history/div/history-header/div/form/div/div/div[2]/history-filters/div/div[1]/div/div/div[8]/history-export/div/div/div[2]/custom-select/div/div/div/div[1]"""
+            sleep 2
+            // click csv
+            waitForSelectorAndClick p """//*[@id="option_document_type_CSV"]"""
+            sleep 2
+
+            let products =
+                [
+                    """//*[@id="option_product_***REMOVED***"]"""
+                    """//*[@id="option_product_***REMOVED***"]"""
+                    """//*[@id="option_product_***REMOVED***"]"""
+                    """//*[@id="option_product_***REMOVED***"]"""
+                    """//*[@id="option_product_***REMOVED***"]"""
+                    """//*[@id="option_product_***REMOVED***"]"""
+                    """//*[@id="option_product_***REMOVED***"]"""
+                ]
+
+            // transactions must be downloaded per product separately. If all products are selected internal transaction are messed up.
+            for product_selector in products do
+                // click Product
+                waitForSelectorAndClick p """//*[@id="app-content"]/div[2]/div/payments/div/payment-history/section/div/div/div/history/div/history-header/div/form/div/div/div[2]/history-filters/div/div[1]/div/div/div[6]/history-filter-product/fieldset/div/custom-select/div/span/div/div[1]"""
+                sleep 2
+
+                waitForSelectorAndClick p product_selector
+                sleep 2
+                p.Keyboard.PressAsync("Escape").Wait() // close Product drop-down
+                sleep 2
+
+                // Apply filters
+                waitForSelectorAndClick p """//*[@id="app-content"]/div[2]/div/payments/div/payment-history/section/div/div/div/history/div/history-header/div/form/div/div/div[2]/history-filters/div/div[1]/div/div/div[9]/button-cta/button"""
+                sleep 2
+
+                // click Download
+                waitForSelectorAndClick p """//*[@id="app-content"]/div[2]/div/payments/div/payment-history/section/div/div/div/history/div/history-header/div/form/div/div/div[2]/history-filters/div/div[1]/div/div/div[8]/history-export/div/div/div[3]/button-cta/button/span"""
+                sleep 5
+                printfn "File should be ready in \"Downloads\" folder"
+
+                // deselect product
+                // click Product
+                waitForSelectorAndClick p """//*[@id="app-content"]/div[2]/div/payments/div/payment-history/section/div/div/div/history/div/history-header/div/form/div/div/div[2]/history-filters/div/div[1]/div/div/div[6]/history-filter-product/fieldset/div/custom-select/div/span/div/div[1]"""
+                sleep 2
+                waitForSelectorAndClick p product_selector
+                sleep 2
+                p.Keyboard.PressAsync("Escape").Wait() // close Product drop-down
+                sleep 2
+
+                let home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)
+                let file =
+                    Directory.EnumerateFiles(Path.Combine(home,"Downloads"), "*.csv")
+                    |> List.ofSeq
+                    |> List.map              (fun x -> new FileInfo(x))
+                    |> List.filter           (fun x -> DateTimeOffset.UtcNow - DateTimeOffset(x.CreationTimeUtc) < TimeSpan.FromSeconds(60.))
+                    |> List.sortByDescending (fun x -> x.CreationTimeUtc)
+                    |> List.tryHead
+
+                match file with
+                | Some f ->
+                    printfn "found file, moving to 'finances'"
+                    File.Copy(f.FullName, Path.Combine("./input_data/alior/", f.Name), true)
+                | None -> printfn "not found"
