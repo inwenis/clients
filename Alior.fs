@@ -16,14 +16,17 @@ module Alior =
             let bf = new BrowserFetcher()
             bf.DownloadAsync() |> wait
 
-        member this.SignIn() =
+        member this.SignIn(username, password) =
             if signedIn |> not then
                 p <-
                     let l_options = new LaunchOptions(Headless = false, DefaultViewport = ViewPortOptions())
                     let b = Puppeteer.LaunchAsync(l_options) |> run_sync
                     b.PagesAsync() |> run_sync |> Array.exactlyOne
                 p.GoToAsync("https://system.aliorbank.pl/sign-in", timeout=60 * 1000) |> wait
-
+                waitForXpathAndType p "xpath///input[@id='login']" username
+                waitForSelectorAndClick p "xpath///button[@title='Next']"
+                waitForXpathAndType p "xpath///input[@id='password']" password
+                waitForSelectorAndClick p "xpath///button[@id='password-submit']"
                 waitForSelectorAndClick p "xpath///button[contains(text(),'One-time access')]"
                 p.WaitForSelectorAsync("xpath///*[contains(text(),'My wallet')]") |> wait // we wait for the main page to load after logging in
                 sleep 2

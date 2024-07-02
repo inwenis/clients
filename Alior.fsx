@@ -8,13 +8,25 @@
 open clients.Alior
 
 let ac = AliorClient()
-ac.SignIn()
-// ac.Scrape()
 
+let username = System.Environment.GetEnvironmentVariable("ALIOR_USERNAME")
+let password = System.Environment.GetEnvironmentVariable("ALIOR_PASSWORD")
+
+ac.SignIn(username, password)
+// ac.Scrape()
 
 open clients.Utils
 open System.IO
 open System
+open System.Collections
+
+let x = Environment.GetEnvironmentVariables()
+let l = [for (e) in x do e :?> DictionaryEntry]
+l
+|> List.map (fun x -> x.Key :?> string)
+|> List.filter (fun x -> x.Contains("POSH"))
+Environment.GetEnvironmentVariable("POSH_GIT_ENABLED")
+
 
 let p = ac.GetP()
 // go to Dashboard (aka. home page) first, if you're already on "Payments page" you can't click "New payment"
