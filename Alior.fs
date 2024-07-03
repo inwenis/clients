@@ -83,7 +83,7 @@ module Alior =
 
             sleep 2
 
-        member this.TransferTax(transfer:Transfers.Row) =
+        member this.TransferTax(transfer:Transfers.Row, taxOfficeName) =
             let year, month =
                 let split = transfer.TransferText.Split("/")
                 split.[0], split.[1]
@@ -100,8 +100,8 @@ module Alior =
             waitForXpathAndType p "xpath///*[@id='form-symbol']" "PPE"
             waitForSelectorAndClick p "xpath///span[contains(text(),'PPE')]" // after typing the `tax form symbol` I have to select it from the drop-down
 
-            waitForXpathAndType p "xpath///*[@id='tax-department']" "***REMOVED***"
-            waitForSelectorAndClick p "xpath///span[contains(text(),'***REMOVED***')]" // after typing the `tax department` I have to select it from the drop-down
+            waitForXpathAndType p $"xpath///*[@id='tax-department']" "{taxOfficeName}"
+            waitForSelectorAndClick p $"xpath///span[contains(text(),'{taxOfficeName}')]" // after typing the `tax department` I have to select it from the drop-down
 
             waitForXpathAndType p "xpath///*[@id='department-account-number']" transfer.ReceiverAccount
             waitForXpathAndType p "xpath///*[@id='amount.value']" (transfer.Amount |> string)
@@ -167,13 +167,13 @@ module Alior =
 
             let products =
                 [
-                    """//*[@id="option_product_***REMOVED***"]"""
-                    """//*[@id="option_product_***REMOVED***"]"""
-                    """//*[@id="option_product_***REMOVED***"]"""
-                    """//*[@id="option_product_***REMOVED***"]"""
-                    """//*[@id="option_product_***REMOVED***"]"""
-                    """//*[@id="option_product_***REMOVED***"]"""
-                    """//*[@id="option_product_***REMOVED***"]"""
+                    """//*[@id="option_product_TODO"]"""
+                    """//*[@id="option_product_TODO"]"""
+                    """//*[@id="option_product_TODO"]"""
+                    """//*[@id="option_product_TODO"]"""
+                    """//*[@id="option_product_TODO"]"""
+                    """//*[@id="option_product_TODO"]"""
+                    """//*[@id="option_product_TODO"]"""
                 ]
 
             // transactions must be downloaded per product separately. If all products are selected internal transaction are messed up.

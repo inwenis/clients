@@ -80,13 +80,13 @@ products
 |> List.map ()
 let products =
     [
-        """xpath///*[@id="option_product_***REMOVED***"]"""
-        """xpath///*[@id="option_product_***REMOVED***"]"""
-        """xpath///*[@id="option_product_***REMOVED***"]"""
-        """xpath///*[@id="option_product_***REMOVED***"]"""
-        """xpath///*[@id="option_product_***REMOVED***"]"""
-        """xpath///*[@id="option_product_***REMOVED***"]"""
-        """xpath///*[@id="option_product_***REMOVED***"]"""
+        """xpath///*[@id="option_product_TODO"]"""
+        """xpath///*[@id="option_product_TODO"]"""
+        """xpath///*[@id="option_product_TODO"]"""
+        """xpath///*[@id="option_product_TODO"]"""
+        """xpath///*[@id="option_product_TODO"]"""
+        """xpath///*[@id="option_product_TODO"]"""
+        """xpath///*[@id="option_product_TODO"]"""
     ]
 
 // transactions must be downloaded per product separately. If all products are selected internal transaction are messed up.
