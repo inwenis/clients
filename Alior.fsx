@@ -7,26 +7,17 @@
 
 open clients.Alior
 
+open clients.Utils
+open System.IO
+open System
+open PuppeteerSharp
+
 let ac = AliorClient()
 
 let username = System.Environment.GetEnvironmentVariable("ALIOR_USERNAME")
 let password = System.Environment.GetEnvironmentVariable("ALIOR_PASSWORD")
 
 ac.SignIn(username, password)
-// ac.Scrape()
-
-open clients.Utils
-open System.IO
-open System
-open System.Collections
-
-let x = Environment.GetEnvironmentVariables()
-let l = [for (e) in x do e :?> DictionaryEntry]
-l
-|> List.map (fun x -> x.Key :?> string)
-|> List.filter (fun x -> x.Contains("POSH"))
-Environment.GetEnvironmentVariable("POSH_GIT_ENABLED")
-
 
 let p = ac.GetP()
 // go to Dashboard (aka. home page) first, if you're already on "Payments page" you can't click "New payment"
@@ -48,12 +39,40 @@ sleep 2
 // click csv
 waitForSelectorAndClick p """xpath///*[@id="option_document_type_CSV"]"""
 sleep 2
-
+let x = p.GetContentAsync() |> Async.AwaitTask |> Async.RunSynchronously
+File.WriteAllText("out.html", x)
 // stopped here trying to get list of products
 
 let products = p.QuerySelectorAllAsync("xpath///*[contains(@id,'option_product')]") |> Async.AwaitTask |> Async.RunSynchronously
 
-let x = products.[0].QuerySelectorAsync("xpath///@id") |> Async.AwaitTask |> Async.RunSynchronously
+p.GoToAsync("https://www.wikipedia.org/").Result
+
+let ds = p.QuerySelectorAllAsync("xpath///div").Result
+let d = ds.[0]
+d.GetPropertiesAsync().Result.Keys.Count
+
+let l_options = new LaunchOptions(Headless = false, DefaultViewport = ViewPortOptions())
+let b = Puppeteer.LaunchAsync(l_options) |> run_sync
+p.GoToAsync("file://c:/git/clients/out.html").Result
+
+d.GetPropertiesAsync
+d.GetPropertyAsync("innerText").Result
+d.EvaluateFunctionAsync<string>("node => node.getAttribute('class')").Result
+
+d.EvaluateFunctionAsync<string[]>("node => Array.from(node.attributes).map(x => x.name)").Result
+
+let x = d.GetPropertyAsync("class").Result
+
+ds
+|> List.ofArray
+|> List.map (fun d -> d.EvaluateFunctionAsync<string[]>("node => Array.from(node.attributes).map(x => x.name)").Result)
+
+
+let x = products.[1].GetPropertyAsync("value") |> Async.AwaitTask |> Async.RunSynchronously
+products.[1].JsonValueAsync().Result
+products.[1].GetPropertiesAsync() |> Async.AwaitTask |> Async.RunSynchronously
+
+x.RemoteObject.Value.ToString()
 x.GetPropertyAsync("value")|> Async.AwaitTask |> Async.RunSynchronously
 
 products
