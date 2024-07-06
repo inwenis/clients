@@ -12,12 +12,12 @@ open System.IO
 open System
 open PuppeteerSharp
 
-let ac = AliorClient()
 
 let username = System.Environment.GetEnvironmentVariable("ALIOR_USERNAME")
 let password = System.Environment.GetEnvironmentVariable("ALIOR_PASSWORD")
 
-ac.SignIn(username, password)
+let ac = AliorClient(username, password)
+ac.SignIn()
 
 let p = ac.GetP()
 // go to Dashboard (aka. home page) first, if you're already on "Payments page" you can't click "New payment"

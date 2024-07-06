@@ -8,7 +8,7 @@ open Types
 module Alior =
     open System.IO
     open System
-    type AliorClient() =
+    type AliorClient(username, password) =
         let mutable signedIn = false
         let mutable p : IPage = null
         do
@@ -16,7 +16,7 @@ module Alior =
             let bf = new BrowserFetcher()
             bf.DownloadAsync() |> wait
 
-        member this.SignIn(username, password) =
+        member this.SignIn() =
             if signedIn |> not then
                 p <-
                     let l_options = new LaunchOptions(Headless = false, DefaultViewport = ViewPortOptions())
@@ -33,6 +33,7 @@ module Alior =
                 signedIn <- true
 
         member this.OpenNewPayment() =
+            this.SignIn()
             try
                 // go to Dashboard (aka. home page) first, if you're already on "Payments page" you can't click "New payment"
                 waitForSelectorAndClick p "xpath///*[contains(text(),'Dashboard')]"
@@ -52,6 +53,7 @@ module Alior =
                 waitForSelectorAndClick p "xpath///*[contains(text(), 'New payment')]"
 
         member this.TransferRegular(transfer:Transfers.Row) =
+            this.SignIn()
             this.OpenNewPayment()
             sleep 2 // if I don't wait before clicking the drop down it will not expand
             waitForSelectorAndClick p "xpath///accounts-select"
@@ -84,6 +86,7 @@ module Alior =
             sleep 2
 
         member this.TransferTax(transfer:Transfers.Row, taxOfficeName) =
+            this.SignIn()
             let year, month =
                 let split = transfer.TransferText.Split("/")
                 split.[0], split.[1]
@@ -142,6 +145,7 @@ module Alior =
         member this.GetP() = p
 
         member this.Scrape() =
+            this.SignIn()
             // click payments
             waitForSelectorAndClick p """/html/body/div/div/app-ajs-root/div/div[1]/internal/main-header/div/div[2]/div/section/div/div/div[2]/main-navigation/div/nav/ul/li[2]/a/span[1]"""
             sleep 2
