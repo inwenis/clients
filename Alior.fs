@@ -110,7 +110,7 @@ module Alior =
             waitForXpathAndType p "xpath///*[@id='form-symbol']" "PPE"
             waitForSelectorAndClick p "xpath///span[contains(text(),'PPE')]" // after typing the `tax form symbol` I have to select it from the drop-down
 
-            waitForXpathAndType p $"xpath///*[@id='tax-department']" "{taxOfficeName}"
+            waitForXpathAndType p $"xpath///*[@id='tax-department']" $"{taxOfficeName}"
             waitForSelectorAndClick p $"xpath///span[contains(text(),'{taxOfficeName}')]" // after typing the `tax department` I have to select it from the drop-down
 
             waitForXpathAndType p "xpath///*[@id='department-account-number']" transfer.ReceiverAccount
