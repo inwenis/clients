@@ -152,66 +152,72 @@ module Alior =
         member this.GetP() = p
 
         member this.Scrape() =
+            let getAttributeNames = fun (d:IElementHandle) -> d.EvaluateFunctionAsync<string[]>("node => Array.from(node.attributes).map(x => x.name)").Result
+            let getAttributeValue = fun name (d:IElementHandle) -> d.EvaluateFunctionAsync<string>($"node => node.getAttribute('{name}')").Result
+            let getAttributes = fun (d:IElementHandle) ->
+                let attributeNames = getAttributeNames d
+                attributeNames
+                |> List.ofArray
+                |> List.map (fun x -> x, getAttributeValue x d)
+                |> Map.ofList
+
             this.SignIn()
-            // click payments
-            waitForSelectorAndClick p """/html/body/div/div/app-ajs-root/div/div[1]/internal/main-header/div/div[2]/div/section/div/div/div[2]/main-navigation/div/nav/ul/li[2]/a/span[1]"""
+            // go to Dashboard (aka. home page) first, if you're already on "Payments page" you can't click "New payment"
+            waitForSelectorAndClick p "xpath///*[contains(text(),'Dashboard')]"
             sleep 2
-            // click payment history
-            waitForSelectorAndClick p """/html/body/div/div/app-ajs-root/div/div[1]/internal/main-header/div/div[2]/div/section/div/div/div[2]/main-navigation/div/nav/ul/li[2]/ul/li[2]/a/span"""
+            waitForSelectorAndClick p "xpath///*[contains(text(),'Payments')]"
+            sleep 2 // need to sleep otherwise the New Payment won't work
+            waitForSelectorAndClick p "xpath///*[contains(text(),'Payment history')]"
             sleep 2
-            // Click show filters
-            waitForSelectorAndClick p """//*[@id="app-content"]/div[2]/div/payments/div/payment-history/section/div/div/div/history/div/history-header/div/form/div/div/div[1]/div/div/a"""
+            waitForSelectorAndClick p "xpath///*[contains(text(),'Show filters')]"
             sleep 2
             // click Period
-            waitForSelectorAndClick p """//*[@id="app-content"]/div[2]/div/payments/div/payment-history/section/div/div/div/history/div/history-header/div/form/div/div/div[2]/history-filters/div/div[1]/div/div/div[3]/history-filter-time/fieldset/div/custom-select/div/div/div/div[1]"""
-            sleep 2
-            // click Last Year
+            waitForSelectorAndClick p """xpath///*[@id="app-content"]/div[2]/div/payments/div/payment-history/section/div/div/div/history/div/history-header/div/form/div/div/div[2]/history-filters/div/div[1]/div/div/div[3]/history-filter-time/fieldset/div/custom-select/div/div/div/div[1]"""
+            // todo - make this a moving range, picking just last year - see if we lose transaction on year change here
             waitForSelectorAndClick p """xpath///*[@id="option_time_LAST_YEAR"]"""
-            sleep 2
 
-            // click file type
-            waitForSelectorAndClick p """//*[@id="app-content"]/div[2]/div/payments/div/payment-history/section/div/div/div/history/div/history-header/div/form/div/div/div[2]/history-filters/div/div[1]/div/div/div[8]/history-export/div/div/div[2]/custom-select/div/div/div/div[1]"""
+            waitForSelectorAndClick p """xpath///*[@id="app-content"]/div[2]/div/payments/div/payment-history/section/div/div/div/history/div/history-header/div/form/div/div/div[2]/history-filters/div/div[1]/div/div/div[8]/history-export/div/div/div[2]/custom-select/div/div/div/div[1]"""
             sleep 2
             // click csv
-            waitForSelectorAndClick p """//*[@id="option_document_type_CSV"]"""
+            waitForSelectorAndClick p """xpath///*[@id="option_document_type_CSV"]"""
             sleep 2
 
-            let products =
-                [
-                    """//*[@id="option_product_TODO"]"""
-                    """//*[@id="option_product_TODO"]"""
-                    """//*[@id="option_product_TODO"]"""
-                    """//*[@id="option_product_TODO"]"""
-                    """//*[@id="option_product_TODO"]"""
-                    """//*[@id="option_product_TODO"]"""
-                    """//*[@id="option_product_TODO"]"""
-                ]
+            let products = p.QuerySelectorAllAsync("xpath///*[contains(@id,'option_product')]") |> Async.AwaitTask |> Async.RunSynchronously
 
+            // products must be accessed by xpaths because the DOM nodes are recreated with every opening of the "Product" drop-down
+            let productsXpaths =
+                products
+                |> List.ofArray
+                |> List.map getAttributes
+                |> List.map (fun x -> x.["id"])
+                |> List.map (fun x -> $"""xpath///*[@id="{x}"]""")
+
+            let mutable files = []
             // transactions must be downloaded per product separately. If all products are selected internal transaction are messed up.
-            for product_selector in products do
+            for product in productsXpaths do
                 // click Product
-                waitForSelectorAndClick p """//*[@id="app-content"]/div[2]/div/payments/div/payment-history/section/div/div/div/history/div/history-header/div/form/div/div/div[2]/history-filters/div/div[1]/div/div/div[6]/history-filter-product/fieldset/div/custom-select/div/span/div/div[1]"""
+                waitForSelectorAndClick p """xpath///*[@id="app-content"]/div[2]/div/payments/div/payment-history/section/div/div/div/history/div/history-header/div/form/div/div/div[2]/history-filters/div/div[1]/div/div/div[6]/history-filter-product/fieldset/div/custom-select/div/span/div/div[1]"""
                 sleep 2
 
-                waitForSelectorAndClick p product_selector
+                waitForSelectorAndClick p product
                 sleep 2
                 p.Keyboard.PressAsync("Escape").Wait() // close Product drop-down
                 sleep 2
 
                 // Apply filters
-                waitForSelectorAndClick p """//*[@id="app-content"]/div[2]/div/payments/div/payment-history/section/div/div/div/history/div/history-header/div/form/div/div/div[2]/history-filters/div/div[1]/div/div/div[9]/button-cta/button"""
+                waitForSelectorAndClick p """xpath///*[@id="app-content"]/div[2]/div/payments/div/payment-history/section/div/div/div/history/div/history-header/div/form/div/div/div[2]/history-filters/div/div[1]/div/div/div[9]/button-cta/button"""
                 sleep 2
 
                 // click Download
-                waitForSelectorAndClick p """//*[@id="app-content"]/div[2]/div/payments/div/payment-history/section/div/div/div/history/div/history-header/div/form/div/div/div[2]/history-filters/div/div[1]/div/div/div[8]/history-export/div/div/div[3]/button-cta/button/span"""
+                waitForSelectorAndClick p """xpath///*[@id="app-content"]/div[2]/div/payments/div/payment-history/section/div/div/div/history/div/history-header/div/form/div/div/div[2]/history-filters/div/div[1]/div/div/div[8]/history-export/div/div/div[3]/button-cta/button/span"""
                 sleep 5
                 printfn "File should be ready in \"Downloads\" folder"
 
                 // deselect product
                 // click Product
-                waitForSelectorAndClick p """//*[@id="app-content"]/div[2]/div/payments/div/payment-history/section/div/div/div/history/div/history-header/div/form/div/div/div[2]/history-filters/div/div[1]/div/div/div[6]/history-filter-product/fieldset/div/custom-select/div/span/div/div[1]"""
+                waitForSelectorAndClick p """xpath///*[@id="app-content"]/div[2]/div/payments/div/payment-history/section/div/div/div/history/div/history-header/div/form/div/div/div[2]/history-filters/div/div[1]/div/div/div[6]/history-filter-product/fieldset/div/custom-select/div/span/div/div[1]"""
                 sleep 2
-                waitForSelectorAndClick p product_selector
+                waitForSelectorAndClick p product
                 sleep 2
                 p.Keyboard.PressAsync("Escape").Wait() // close Product drop-down
                 sleep 2
@@ -224,9 +230,5 @@ module Alior =
                     |> List.filter           (fun x -> DateTimeOffset.UtcNow - DateTimeOffset(x.CreationTimeUtc) < TimeSpan.FromSeconds(60.))
                     |> List.sortByDescending (fun x -> x.CreationTimeUtc)
                     |> List.tryHead
-
-                match file with
-                | Some f ->
-                    printfn "found file, moving to 'finances'"
-                    File.Copy(f.FullName, Path.Combine("./input_data/alior/", f.Name), true)
-                | None -> printfn "not found"
+                files <- files |> List.append [file]
+            files
