@@ -1,5 +1,5 @@
 #r "nuget: FSharp.Data, 6.4.0"
-#r "nuget: PuppeteerSharp, 18.0.2"
+#r "nuget: PuppeteerSharp, 18.0.3"
 
 #load "Utils.fs"
 #load "Alior.fs"
