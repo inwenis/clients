@@ -30,9 +30,9 @@ module Alior =
                     let b = Puppeteer.LaunchAsync(l_options) |> run_sync
                     b.PagesAsync() |> run_sync |> Array.exactlyOne
                 p.GoToAsync("https://system.aliorbank.pl/sign-in", timeout=60 * 1000) |> wait
-                waitForXpathAndType p "xpath///input[@id='login']" username
+                waitForXpathAndType p "xpath///input[@id='login']" (username ())
                 waitForSelectorAndClick p "xpath///button[@title='Next']"
-                waitForXpathAndType p "xpath///input[@id='password']" password
+                waitForXpathAndType p "xpath///input[@id='password']" (password ())
                 waitForSelectorAndClick p "xpath///button[@id='password-submit']"
                 waitForSelectorAndClick p "xpath///button[contains(text(),'One-time access')]"
                 p.WaitForSelectorAsync("xpath///*[contains(text(),'My wallet')]") |> wait // we wait for the main page to load after logging in

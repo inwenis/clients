@@ -4,16 +4,16 @@
 #load "Utils.fs"
 #load "Alior.fs"
 
-open clients.Alior
-
-open clients.Utils
 open System.IO
 open System
 open PuppeteerSharp
 
+open clients.Utils
+open clients.Alior
 
-let username = System.Environment.GetEnvironmentVariable("ALIOR_USERNAME")
-let password = System.Environment.GetEnvironmentVariable("ALIOR_PASSWORD")
+
+let username () = System.Environment.GetEnvironmentVariable("ALIOR_USERNAME")
+let password () = System.Environment.GetEnvironmentVariable("ALIOR_PASSWORD")
 
 let ac = AliorClient(username, password)
 ac.SignIn()
