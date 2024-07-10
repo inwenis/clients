@@ -15,13 +15,19 @@ Billing account name is long to align with head,Receiver2,   12 1234 1234 12,Tit
 
 module Alior =
 
-    type AliorClient(username, password) =
-        let mutable signedIn = false
-        let mutable p : IPage = null
+    type AliorClient private (username, password, p, signedIn) =
+        let mutable signedIn = signedIn
+        let mutable p : IPage = p
         do
             printfn "downloading chromium"
             let bf = new BrowserFetcher()
             bf.DownloadAsync() |> wait
+
+        new(username, password, p) =
+            AliorClient(username, password, p, true)
+
+        new(username, password) =
+            AliorClient(username, password, null, false)
 
         member this.SignIn() =
             if signedIn |> not then
@@ -172,16 +178,19 @@ module Alior =
             waitForSelectorAndClick p "xpath///*[contains(text(),'Show filters')]"
             sleep 2
             // click Period
-            waitForSelectorAndClick p """xpath///*[@id="app-content"]/div[2]/div/payments/div/payment-history/section/div/div/div/history/div/history-header/div/form/div/div/div[2]/history-filters/div/div[1]/div/div/div[3]/history-filter-time/fieldset/div/custom-select/div/div/div/div[1]"""
+            waitForSelectorAndClick p "xpath///div[@id='list_time']/parent::div/parent::div"
             // todo - make this a moving range, picking just last year - see if we lose transaction on year change here
             waitForSelectorAndClick p """xpath///*[@id="option_time_LAST_YEAR"]"""
-
-            waitForSelectorAndClick p """xpath///*[@id="app-content"]/div[2]/div/payments/div/payment-history/section/div/div/div/history/div/history-header/div/form/div/div/div[2]/history-filters/div/div[1]/div/div/div[8]/history-export/div/div/div[2]/custom-select/div/div/div/div[1]"""
+            // click File type
+            waitForSelectorAndClick p "xpath///div[@id='list_document_type']/parent::div/parent::div"
             sleep 2
             // click csv
             waitForSelectorAndClick p """xpath///*[@id="option_document_type_CSV"]"""
             sleep 2
 
+            // click Product
+            waitForSelectorAndClick p "xpath///div[@id='list_product']/parent::div/parent::div"
+            sleep 1
             let products = p.QuerySelectorAllAsync("xpath///*[contains(@id,'option_product')]") |> Async.AwaitTask |> Async.RunSynchronously
 
             // products must be accessed by xpaths because the DOM nodes are recreated with every opening of the "Product" drop-down
@@ -192,11 +201,14 @@ module Alior =
                 |> List.map (fun x -> x.["id"])
                 |> List.map (fun x -> $"""xpath///*[@id="{x}"]""")
 
+            // click Product to close dropdown
+            waitForSelectorAndClick p "xpath///div[@id='list_product']/parent::div/parent::div"
+
             let mutable files = []
             // transactions must be downloaded per product separately. If all products are selected internal transaction are messed up.
             for product in productsXpaths do
                 // click Product
-                waitForSelectorAndClick p """xpath///*[@id="app-content"]/div[2]/div/payments/div/payment-history/section/div/div/div/history/div/history-header/div/form/div/div/div[2]/history-filters/div/div[1]/div/div/div[6]/history-filter-product/fieldset/div/custom-select/div/span/div/div[1]"""
+                waitForSelectorAndClick p "xpath///div[@id='list_product']/parent::div/parent::div"
                 sleep 2
 
                 waitForSelectorAndClick p product
@@ -222,13 +234,9 @@ module Alior =
                 p.Keyboard.PressAsync("Escape").Wait() // close Product drop-down
                 sleep 2
 
-                let home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)
-                let file =
-                    Directory.EnumerateFiles(Path.Combine(home,"Downloads"), "*.csv")
-                    |> List.ofSeq
-                    |> List.map              (fun x -> new FileInfo(x))
-                    |> List.filter           (fun x -> DateTimeOffset.UtcNow - DateTimeOffset(x.CreationTimeUtc) < TimeSpan.FromSeconds(60.))
-                    |> List.sortByDescending (fun x -> x.CreationTimeUtc)
-                    |> List.tryHead
-                files <- files |> List.append [file]
-            files
+            let home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)
+            Directory.EnumerateFiles(Path.Combine(home,"Downloads"), "*.csv")
+            |> List.ofSeq
+            |> List.map              (fun x -> new FileInfo(x))
+            |> List.filter           (fun x -> DateTimeOffset.UtcNow - DateTimeOffset(x.CreationTimeUtc) < TimeSpan.FromMinutes(5))
+            |> List.sortByDescending (fun x -> x.CreationTimeUtc)

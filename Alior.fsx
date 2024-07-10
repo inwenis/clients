@@ -11,14 +11,19 @@ open PuppeteerSharp
 open clients.Utils
 open clients.Alior
 
+#load "Alior.fs"
+open clients.Alior
 
 let username () = System.Environment.GetEnvironmentVariable("ALIOR_USERNAME")
 let password () = System.Environment.GetEnvironmentVariable("ALIOR_PASSWORD")
 
 let ac = AliorClient(username, password)
 ac.SignIn()
-
 let p = ac.GetP()
 
-// todo - fix paths in scraping
+ac.Scrape()
+
+// let ac2 = AliorClient(username, password, p)
+// ac2.Scrape()
+
 // todo make default timeout in waitForSelectorAndClick smaller
