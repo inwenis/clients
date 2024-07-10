@@ -21,8 +21,9 @@ let ac = AliorClient(username, password)
 ac.SignIn()
 let p = ac.GetP()
 
-ac.Scrape()
-
+let files = ac.Scrape()
+files
+|> List.map (fun x -> x.FullName)
 // let ac2 = AliorClient(username, password, p)
 // ac2.Scrape()
 
