@@ -9,12 +9,7 @@ module Utils =
     let sleep x = x |> TimeSpan.FromSeconds |> Thread.Sleep
 
     let waitForSelectorAndClick (p:IPage) xpath =
-        // since we want to click the element we wait for it to be accessible and visible
-        // you can't click an invisible (but accessible element)
-        let opt = WaitForSelectorOptions()
-        opt.Visible <- true
-        opt.Timeout <- 2 * 60 * 1000 // 2 minutes
-        let s = p.WaitForSelectorAsync(xpath, opt).Result
+        let s = p.WaitForSelectorAsync(xpath).Result
         s.ClickAsync().Wait()
 
     let waitForSelectorAndType (page:IPage) xpath text =
