@@ -8,10 +8,8 @@ open System.IO
 open System
 open PuppeteerSharp
 
+open clients
 open clients.Utils
-open clients.Alior
-
-#load "Alior.fs"
 open clients.Alior
 
 let username () = System.Environment.GetEnvironmentVariable("ALIOR_USERNAME")
@@ -26,5 +24,8 @@ files
 |> List.map (fun x -> x.FullName)
 // let ac2 = AliorClient(username, password, p)
 // ac2.Scrape()
-
+let this = ac
 // todo make default timeout in waitForSelectorAndClick smaller
+
+let taxOfficeName = "Kujawsko-Pomorski Urząd Skarbowy w Bydgoszczy"
+let transfer = Transfers.Row("Kuni", "asdf", "asdf", "asdf", 123M, DateTimeOffset.UtcNow,  "asdf", "asdf")

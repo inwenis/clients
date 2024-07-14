@@ -7,6 +7,7 @@ open System.IO
 open System
 open FSharp.Data
 
+
 type Transfers = CsvProvider<"""FromAccount,ReceiverName,ReceiverAccount,TransferText,Amount,InsertedDateTime,Status,Type
 Billing account name is long to align with head,Receiver1,   12 1234 1234 12,Title of tra, 58.00,2023-03-01T00:00:00.0000000+02:00,ToBeExecuted,Regular
 Billing account name is long to align with head,Receiver3,   12 1234 1234 12,Title of tra, 12.52,2023-03-01T00:00:00.0000000+02:00,ToBeExecuted,Regular
@@ -36,9 +37,9 @@ module Alior =
                     let b = Puppeteer.LaunchAsync(l_options) |> run_sync
                     b.PagesAsync() |> run_sync |> Array.exactlyOne
                 p.GoToAsync("https://system.aliorbank.pl/sign-in", timeout=60 * 1000) |> wait
-                waitForXpathAndType p "xpath///input[@id='login']" (username ())
+                waitForSelectorAndType p "xpath///input[@id='login']" (username ())
                 waitForSelectorAndClick p "xpath///button[@title='Next']"
-                waitForXpathAndType p "xpath///input[@id='password']" (password ())
+                waitForSelectorAndType p "xpath///input[@id='password']" (password ())
                 waitForSelectorAndClick p "xpath///button[@id='password-submit']"
                 waitForSelectorAndClick p "xpath///button[contains(text(),'One-time access')]"
                 p.WaitForSelectorAsync("xpath///*[contains(text(),'My wallet')]") |> wait // we wait for the main page to load after logging in
@@ -71,11 +72,11 @@ module Alior =
             sleep 2 // if I don't wait before clicking the drop down it will not expand
             waitForSelectorAndClick p "xpath///accounts-select"
             let drop_down = p.WaitForSelectorAsync("xpath///accounts-select") |> run_sync
-            transfer.FromAccount      |> fun x -> clickE $"xpath/(.//*[contains(text(), '{x}')])[last()]" drop_down
-            transfer.ReceiverName     |> waitForXpathAndType p "xpath///*[@id='destination.name']"
-            transfer.ReceiverAccount  |> waitForXpathAndType p "xpath///*[@id='account_number']"
-            transfer.Amount |> string |> waitForXpathAndType p "xpath///*[@id='amount.value']"
-            transfer.TransferText     |> waitForXpathAndType p "xpath///*[@id='title']"
+            transfer.FromAccount      |> fun x -> clickSelector $"xpath/(.//*[contains(text(), '{x}')])[last()]" drop_down
+            transfer.ReceiverName     |> waitForSelectorAndType p "xpath///*[@id='destination.name']"
+            transfer.ReceiverAccount  |> waitForSelectorAndType p "xpath///*[@id='account_number']"
+            transfer.Amount |> string |> waitForSelectorAndType p "xpath///*[@id='amount.value']"
+            transfer.TransferText     |> waitForSelectorAndType p "xpath///*[@id='title']"
 
             // sleep 1 since I can't use `wait for xpath` - at lest I need a better xpath for `wait for xpath` to work
             sleep 1
@@ -83,7 +84,7 @@ module Alior =
             |> run_sync
             |> Array.filter (fun x -> x.QuerySelectorAllAsync("xpath/.//*[contains(text(), 'Next')]").Result.Length = 1 )
             |> Array.exactlyOne
-            |> click
+            |> clickElement
 
             let waitingForDomesticTransferFinish = p.WaitForSelectorAsync("xpath///*[contains(text(),'Domestic transfer submitted.')]") |> Async.AwaitTask |> Async.Ignore |> Async.StartAsTask :> Task
             let waitingForInternalTransferFinish = task {
@@ -107,30 +108,26 @@ module Alior =
             this.OpenNewPayment()
             sleep 2
             waitForSelectorAndClick p "xpath///*[contains(text(),'Tax transfer')]"
-            sleep 2 // if I don't wait before clicking the drop down it will not expand
-            waitForSelectorAndClick p "xpath///accounts-select"
+            sleep 2
 
-            let drop_down = p.WaitForSelectorAsync("xpath///accounts-select") |> run_sync
-            drop_down |> clickE $"xpath/(.//*[contains(text(), '{transfer.FromAccount}')])[last()]"
+            let fromAccountDropDown = p.WaitForSelectorAsync("xpath///accounts-select") |> run_sync
+            clickElement fromAccountDropDown
+            fromAccountDropDown |> clickSelector $"xpath/(.//*[contains(text(), '{transfer.FromAccount}')])[last()]"
 
-            waitForXpathAndType p "xpath///*[@id='form-symbol']" "PPE"
+            waitForSelectorAndType p "xpath///*[@id='form-symbol']" "PPE"
             waitForSelectorAndClick p "xpath///span[contains(text(),'PPE')]" // after typing the `tax form symbol` I have to select it from the drop-down
 
-            waitForXpathAndType p $"xpath///*[@id='tax-department']" $"{taxOfficeName}"
+            waitForSelectorAndType p $"xpath///*[@id='tax-department']" $"{taxOfficeName}"
             waitForSelectorAndClick p $"xpath///span[contains(text(),'{taxOfficeName}')]" // after typing the `tax department` I have to select it from the drop-down
 
-            waitForXpathAndType p "xpath///*[@id='department-account-number']" transfer.ReceiverAccount
-            waitForXpathAndType p "xpath///*[@id='amount.value']" (transfer.Amount |> string)
+            waitForSelectorAndType p "xpath///*[@id='department-account-number']" transfer.ReceiverAccount
+            waitForSelectorAndType p "xpath///*[@id='amount.value']" (transfer.Amount |> string)
             sleep 1
 
-            // TODO - get proper xpath to select the drop-down
-            p.QuerySelectorAllAsync("xpath///custom-select[@class='obligation-period-dropdown']").Result.[0].ClickAsync().Wait()
+            let periodDropDown = p.QuerySelectorAsync("xpath///custom-select[@class='obligation-period-dropdown']").Result
+            clickElement periodDropDown
             sleep 1
-            let drop_down =
-                p.QuerySelectorAllAsync("xpath///custom-select[@class='obligation-period-dropdown']")
-                |> run_sync
-                |> Array.head
-            drop_down |> clickE $"xpath/(.//*[contains(text(), 'Month')])[last()]"
+            clickSelector $"xpath/(.//*[contains(text(), 'Month')])[last()]" periodDropDown
 
             let e = p.WaitForSelectorAsync("xpath///*[@id='obligation_year']").Result
             // press backspace 4 times to remove year that is there by default
@@ -144,13 +141,15 @@ module Alior =
                 p.QuerySelectorAllAsync("xpath///custom-select[@class='obligation-period-dropdown']")
                 |> run_sync
                 |> Array.last
-            drop_down |> clickE $"xpath/(.//*[contains(text(), '{month}')])[last()]"
+            drop_down |> clickSelector $"xpath/(.//*[contains(text(), '{month}')])[last()]"
 
             p.QuerySelectorAllAsync("xpath///button")
             |> run_sync
             |> Array.filter (fun x -> x.QuerySelectorAllAsync("xpath/.//*[contains(text(), 'Next')]").Result.Length = 1 )
             |> Array.exactlyOne
-            |> click
+            |> clickElement
+
+            // confirm/discard with phone here
 
             p.WaitForSelectorAsync("xpath///*[contains(text(),'Tax transfer sent')]") |> wait
             sleep 2
