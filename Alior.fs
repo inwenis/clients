@@ -16,7 +16,7 @@ Billing account name is long to align with head,Receiver2,   12 1234 1234 12,Tit
 
 module Alior =
 
-    type AliorClient private (username, password, p, signedIn) =
+    type AliorClient private (username, password, p, signedIn, isTest) =
         let mutable signedIn = signedIn
         let mutable p : IPage = p
         do
@@ -24,11 +24,11 @@ module Alior =
             let bf = new BrowserFetcher()
             bf.DownloadAsync() |> wait
 
-        new(username, password, p) =
-            AliorClient(username, password, p, true)
+        new(username, password, p, isTest) =
+            AliorClient(username, password, p, true, isTest)
 
-        new(username, password) =
-            AliorClient(username, password, null, false)
+        new(username, password, isTest) =
+            AliorClient(username, password, null, false, isTest)
 
         member this.SignIn() =
             if signedIn |> not then
@@ -78,26 +78,29 @@ module Alior =
             transfer.Amount |> string |> waitForSelectorAndType p "xpath///*[@id='amount.value']"
             transfer.TransferText     |> waitForSelectorAndType p "xpath///*[@id='title']"
 
-            // sleep 1 since I can't use `wait for xpath` - at lest I need a better xpath for `wait for xpath` to work
-            sleep 1
-            p.QuerySelectorAllAsync("xpath///button")
-            |> run_sync
-            |> Array.filter (fun x -> x.QuerySelectorAllAsync("xpath/.//*[contains(text(), 'Next')]").Result.Length = 1 )
-            |> Array.exactlyOne
-            |> clickElement
+            if isTest |> not then
+                // sleep 1 since I can't use `wait for xpath` - at lest I need a better xpath for `wait for xpath` to work
+                sleep 1
+                p.QuerySelectorAllAsync("xpath///button")
+                |> run_sync
+                |> Array.filter (fun x -> x.QuerySelectorAllAsync("xpath/.//*[contains(text(), 'Next')]").Result.Length = 1 )
+                |> Array.exactlyOne
+                |> clickElement
 
-            let waitingForDomesticTransferFinish = p.WaitForSelectorAsync("xpath///*[contains(text(),'Domestic transfer submitted.')]") |> Async.AwaitTask |> Async.Ignore |> Async.StartAsTask :> Task
-            let waitingForInternalTransferFinish = task {
-                let! s = p.WaitForSelectorAsync("xpath///*[contains(text(),'Confirm')]")
+                let waitingForDomesticTransferFinish = p.WaitForSelectorAsync("xpath///*[contains(text(),'Domestic transfer submitted.')]") |> Async.AwaitTask |> Async.Ignore |> Async.StartAsTask :> Task
+                let waitingForInternalTransferFinish = task {
+                    let! s = p.WaitForSelectorAsync("xpath///*[contains(text(),'Confirm')]")
+                    sleep 2
+                    do! s.ClickAsync()
+                    // after internal transfers it seems we're back at the "Create transfer page"
+                    do p.WaitForSelectorAsync("xpath///*[contains(text(),'Create domestic transfer')]") |> ignore
+                }
+                let x = waitingForInternalTransferFinish :> Task
+                System.Threading.Tasks.Task.WaitAny([|waitingForDomesticTransferFinish; x|], 30 * 1000) |> ignore
+
                 sleep 2
-                do! s.ClickAsync()
-                // after internal transfers it seems we're back at the "Create transfer page"
-                do p.WaitForSelectorAsync("xpath///*[contains(text(),'Create domestic transfer')]") |> ignore
-            }
-            let x = waitingForInternalTransferFinish :> Task
-            System.Threading.Tasks.Task.WaitAny([|waitingForDomesticTransferFinish; x|], 30 * 1000) |> ignore
-
-            sleep 2
+            else
+                printfn "Test mode - not sending the transfer"
 
         member this.TransferTax(transfer:Transfers.Row, taxOfficeName) =
             this.SignIn()
@@ -124,35 +127,38 @@ module Alior =
             waitForSelectorAndType p "xpath///*[@id='amount.value']" (transfer.Amount |> string)
             sleep 1
 
-            let periodDropDown = p.QuerySelectorAsync("xpath///custom-select[@class='obligation-period-dropdown']").Result
+
+            let periodDropDown = p.QuerySelectorAllAsync("xpath///custom-select[@class='obligation-period-dropdown']").Result.[0]
             clickElement periodDropDown
             sleep 1
             clickSelector $"xpath/(.//*[contains(text(), 'Month')])[last()]" periodDropDown
+            sleep 1
+            // after selecting 'Month' the "Select month" drop-down appears
+            let monthPeriodDropDown = p.QuerySelectorAsync("xpath/(//custom-select[@class='obligation-period-dropdown'])[last()]").Result
 
             let e = p.WaitForSelectorAsync("xpath///*[@id='obligation_year']").Result
             // press backspace 4 times to remove year that is there by default
             for _ in [1..4] do
                 e.PressAsync("Backspace").Wait()
             e.TypeAsync(year).Wait()
-
-            p.QuerySelectorAllAsync("xpath///custom-select[@class='obligation-period-dropdown']").Result.[1].ClickAsync().Wait()
             sleep 1
-            let drop_down =
-                p.QuerySelectorAllAsync("xpath///custom-select[@class='obligation-period-dropdown']")
+
+            clickElement monthPeriodDropDown
+            monthPeriodDropDown |> clickSelector $"xpath/(.//*[contains(text(), '{month}')])[last()]"
+
+            if isTest |> not then
+                p.QuerySelectorAllAsync("xpath///button")
                 |> run_sync
-                |> Array.last
-            drop_down |> clickSelector $"xpath/(.//*[contains(text(), '{month}')])[last()]"
+                |> Array.filter (fun x -> x.QuerySelectorAllAsync("xpath/.//*[contains(text(), 'Next')]").Result.Length = 1 )
+                |> Array.exactlyOne
+                |> clickElement
 
-            p.QuerySelectorAllAsync("xpath///button")
-            |> run_sync
-            |> Array.filter (fun x -> x.QuerySelectorAllAsync("xpath/.//*[contains(text(), 'Next')]").Result.Length = 1 )
-            |> Array.exactlyOne
-            |> clickElement
+                // confirm/discard with phone here
 
-            // confirm/discard with phone here
-
-            p.WaitForSelectorAsync("xpath///*[contains(text(),'Tax transfer sent')]") |> wait
-            sleep 2
+                p.WaitForSelectorAsync("xpath///*[contains(text(),'Tax transfer sent')]") |> wait
+                sleep 2
+            else
+                printfn "Test mode - not sending the transfer"
 
         member this.GetP() = p
 

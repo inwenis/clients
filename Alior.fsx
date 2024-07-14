@@ -15,17 +15,17 @@ open clients.Alior
 let username () = System.Environment.GetEnvironmentVariable("ALIOR_USERNAME")
 let password () = System.Environment.GetEnvironmentVariable("ALIOR_PASSWORD")
 
-let ac = AliorClient(username, password)
+// let ac = AliorClient(username, password)
+let ac = AliorClient(username, password, p, true)
 ac.SignIn()
 let p = ac.GetP()
 
-let files = ac.Scrape()
-files
-|> List.map (fun x -> x.FullName)
-// let ac2 = AliorClient(username, password, p)
-// ac2.Scrape()
 let this = ac
-// todo make default timeout in waitForSelectorAndClick smaller
 
-let taxOfficeName = "Kujawsko-Pomorski Urząd Skarbowy w Bydgoszczy"
-let transfer = Transfers.Row("Kuni", "asdf", "asdf", "asdf", 123M, DateTimeOffset.UtcNow,  "asdf", "asdf")
+let taxOfficeName = "Drugi Mazowiecki Urząd Skarbowy Warszawa"
+let transfer = Transfers.Row("", "asdf", "84101000712221000000000000", "2024/April", 123M, DateTimeOffset.UtcNow,  "asdf", "asdf")
+
+#load "Alior.fs"
+open clients.Alior
+let ac = AliorClient(username, password, p, true)
+ac.TransferTax(transfer, taxOfficeName)
