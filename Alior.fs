@@ -37,11 +37,11 @@ module Alior =
                     let b = Puppeteer.LaunchAsync(l_options) |> runSync
                     b.PagesAsync() |> runSync |> Array.exactlyOne
                 p.GoToAsync("https://system.aliorbank.pl/sign-in", timeout=60 * 1000) |> wait
-                waitForSelectorAndType p "xpath///input[@id='login']" (username ())
-                waitForSelectorAndClick p "xpath///button[@title='Next']"
-                waitForSelectorAndType p "xpath///input[@id='password']" (password ())
-                waitForSelectorAndClick p "xpath///button[@id='password-submit']"
-                waitForSelectorAndClick p "xpath///button[contains(text(),'One-time access')]"
+                typet p "xpath///input[@id='login']" (username ())
+                click p "xpath///button[@title='Next']"
+                typet p "xpath///input[@id='password']" (password ())
+                click p "xpath///button[@id='password-submit']"
+                click p "xpath///button[contains(text(),'One-time access')]"
                 p.WaitForSelectorAsync("xpath///*[contains(text(),'My wallet')]") |> wait // we wait for the main page to load after logging in
                 sleep 2
                 signedIn <- true
@@ -50,33 +50,33 @@ module Alior =
             this.SignIn()
             try
                 // go to Dashboard (aka. home page) first, if you're already on "Payments page" you can't click "New payment"
-                waitForSelectorAndClick p "xpath///*[contains(text(),'Dashboard')]"
+                click p "xpath///*[contains(text(),'Dashboard')]"
                 sleep 2
-                waitForSelectorAndClick p "xpath///*[contains(text(),'Payments')]"
+                click p "xpath///*[contains(text(),'Payments')]"
                 sleep 1 // need to sleep otherwise the New Payment won't work
-                waitForSelectorAndClick p "xpath///*[contains(text(),'New payment')]"
+                click p "xpath///*[contains(text(),'New payment')]"
             with
             | e ->
                 // on my laptop when the screen is too small the top menu is hidden and I need to first click 'Menu'
-                waitForSelectorAndClick p "xpath///*[contains(text(),'Menu')]"
+                click p "xpath///*[contains(text(),'Menu')]"
                 sleep 1
-                waitForSelectorAndClick p "xpath///*[contains(text(),'Dashboard')]"
+                click p "xpath///*[contains(text(),'Dashboard')]"
                 sleep 2 // somehow it didn't work without this wait
-                waitForSelectorAndClick p "xpath///a/span[contains(text(),'Payments')]/.."
+                click p "xpath///a/span[contains(text(),'Payments')]/.."
                 sleep 1
-                waitForSelectorAndClick p "xpath///*[contains(text(), 'New payment')]"
+                click p "xpath///*[contains(text(), 'New payment')]"
 
         member this.TransferRegular(transfer:Transfers.Row) =
             this.SignIn()
             this.OpenNewPayment()
             sleep 2 // if I don't wait before clicking the drop down it will not expand
-            waitForSelectorAndClick p "xpath///accounts-select"
+            click p "xpath///accounts-select"
             let drop_down = p.WaitForSelectorAsync("xpath///accounts-select") |> runSync
             transfer.FromAccount      |> fun x -> clickSelector $"xpath/(.//*[contains(text(), '{x}')])[last()]" drop_down
-            transfer.ReceiverName     |> waitForSelectorAndType p "xpath///*[@id='destination.name']"
-            transfer.ReceiverAccount  |> waitForSelectorAndType p "xpath///*[@id='account_number']"
-            transfer.Amount |> string |> waitForSelectorAndType p "xpath///*[@id='amount.value']"
-            transfer.TransferText     |> waitForSelectorAndType p "xpath///*[@id='title']"
+            transfer.ReceiverName     |> typet p "xpath///*[@id='destination.name']"
+            transfer.ReceiverAccount  |> typet p "xpath///*[@id='account_number']"
+            transfer.Amount |> string |> typet p "xpath///*[@id='amount.value']"
+            transfer.TransferText     |> typet p "xpath///*[@id='title']"
 
             if isTest |> not then
                 // sleep 1 since I can't use `wait for xpath` - at lest I need a better xpath for `wait for xpath` to work
@@ -110,21 +110,21 @@ module Alior =
 
             this.OpenNewPayment()
             sleep 2
-            waitForSelectorAndClick p "xpath///*[contains(text(),'Tax transfer')]"
+            click p "xpath///*[contains(text(),'Tax transfer')]"
             sleep 2
 
             let fromAccountDropDown = p.WaitForSelectorAsync("xpath///accounts-select") |> runSync
             clickElement fromAccountDropDown
             fromAccountDropDown |> clickSelector $"xpath/(.//*[contains(text(), '{transfer.FromAccount}')])[last()]"
 
-            waitForSelectorAndType p "xpath///*[@id='form-symbol']" "PPE"
-            waitForSelectorAndClick p "xpath///span[contains(text(),'PPE')]" // after typing the `tax form symbol` I have to select it from the drop-down
+            typet p "xpath///*[@id='form-symbol']" "PPE"
+            click p "xpath///span[contains(text(),'PPE')]" // after typing the `tax form symbol` I have to select it from the drop-down
 
-            waitForSelectorAndType p $"xpath///*[@id='tax-department']" $"{taxOfficeName}"
-            waitForSelectorAndClick p $"xpath///span[contains(text(),'{taxOfficeName}')]" // after typing the `tax department` I have to select it from the drop-down
+            typet p $"xpath///*[@id='tax-department']" $"{taxOfficeName}"
+            click p $"xpath///span[contains(text(),'{taxOfficeName}')]" // after typing the `tax department` I have to select it from the drop-down
 
-            waitForSelectorAndType p "xpath///*[@id='department-account-number']" transfer.ReceiverAccount
-            waitForSelectorAndType p "xpath///*[@id='amount.value']" (transfer.Amount |> string)
+            typet p "xpath///*[@id='department-account-number']" transfer.ReceiverAccount
+            typet p "xpath///*[@id='amount.value']" (transfer.Amount |> string)
             sleep 1
 
 
@@ -144,7 +144,7 @@ module Alior =
             sleep 1
 
             clickElement monthPeriodDropDown
-            monthPeriodDropDown |> clickSelector $"xpath/(.//*[contains(text(), '{month}')])[last()]"
+            clickSelector $"xpath/(.//*[contains(text(), '{month}')])[last()]" monthPeriodDropDown
 
             if isTest |> not then
                 p.QuerySelectorAllAsync("xpath///button")
@@ -174,27 +174,27 @@ module Alior =
 
             this.SignIn()
             // go to Dashboard (aka. home page) first, if you're already on "Payments page" you can't click "New payment"
-            waitForSelectorAndClick p "xpath///*[contains(text(),'Dashboard')]"
+            click p "xpath///*[contains(text(),'Dashboard')]"
             sleep 2
-            waitForSelectorAndClick p "xpath///*[contains(text(),'Payments')]"
+            click p "xpath///*[contains(text(),'Payments')]"
             sleep 2 // need to sleep otherwise the New Payment won't work
-            waitForSelectorAndClick p "xpath///*[contains(text(),'Payment history')]"
+            click p "xpath///*[contains(text(),'Payment history')]"
             sleep 2
-            waitForSelectorAndClick p "xpath///*[contains(text(),'Show filters')]"
+            click p "xpath///*[contains(text(),'Show filters')]"
             sleep 2
             // click Period
-            waitForSelectorAndClick p "xpath///div[@id='list_time']/parent::div/parent::div"
+            click p "xpath///div[@id='list_time']/parent::div/parent::div"
             // todo - make this a moving range, picking just last year - see if we lose transaction on year change here
-            waitForSelectorAndClick p """xpath///*[@id="option_time_LAST_YEAR"]"""
+            click p """xpath///*[@id="option_time_LAST_YEAR"]"""
             // click File type
-            waitForSelectorAndClick p "xpath///div[@id='list_document_type']/parent::div/parent::div"
+            click p "xpath///div[@id='list_document_type']/parent::div/parent::div"
             sleep 2
             // click csv
-            waitForSelectorAndClick p """xpath///*[@id="option_document_type_CSV"]"""
+            click p """xpath///*[@id="option_document_type_CSV"]"""
             sleep 2
 
             // click Product
-            waitForSelectorAndClick p "xpath///div[@id='list_product']/parent::div/parent::div"
+            click p "xpath///div[@id='list_product']/parent::div/parent::div"
             sleep 1
             let products = p.QuerySelectorAllAsync("xpath///*[contains(@id,'option_product')]") |> runSync
 
@@ -207,33 +207,32 @@ module Alior =
                 |> List.map (fun x -> $"""xpath///*[@id="{x}"]""")
 
             // click Product to close dropdown
-            waitForSelectorAndClick p "xpath///div[@id='list_product']/parent::div/parent::div"
+            click p "xpath///div[@id='list_product']/parent::div/parent::div"
 
             // transactions must be downloaded per product separately. If all products are selected internal transaction are messed up.
             for product in productsXpaths do
-                // click Product
-                waitForSelectorAndClick p "xpath///div[@id='list_product']/parent::div/parent::div"
+                click p "xpath///div[@id='list_product']/parent::div/parent::div" // click Product drop-down
                 sleep 2
 
-                waitForSelectorAndClick p product
+                click p product
                 sleep 2
                 p.Keyboard.PressAsync("Escape") |> wait // close Product drop-down
                 sleep 2
 
                 // Apply filters
-                waitForSelectorAndClick p """xpath///*[@id="app-content"]/div[2]/div/payments/div/payment-history/section/div/div/div/history/div/history-header/div/form/div/div/div[2]/history-filters/div/div[1]/div/div/div[9]/button-cta/button"""
+                click p """xpath///*[@id="app-content"]/div[2]/div/payments/div/payment-history/section/div/div/div/history/div/history-header/div/form/div/div/div[2]/history-filters/div/div[1]/div/div/div[9]/button-cta/button"""
                 sleep 2
 
                 // click Download
-                waitForSelectorAndClick p """xpath///*[@id="app-content"]/div[2]/div/payments/div/payment-history/section/div/div/div/history/div/history-header/div/form/div/div/div[2]/history-filters/div/div[1]/div/div/div[8]/history-export/div/div/div[3]/button-cta/button/span"""
+                click p """xpath///*[@id="app-content"]/div[2]/div/payments/div/payment-history/section/div/div/div/history/div/history-header/div/form/div/div/div[2]/history-filters/div/div[1]/div/div/div[8]/history-export/div/div/div[3]/button-cta/button/span"""
                 sleep 5
                 printfn "File should be ready in \"Downloads\" folder"
 
                 // deselect product
                 // click Product
-                waitForSelectorAndClick p """xpath///*[@id="app-content"]/div[2]/div/payments/div/payment-history/section/div/div/div/history/div/history-header/div/form/div/div/div[2]/history-filters/div/div[1]/div/div/div[6]/history-filter-product/fieldset/div/custom-select/div/span/div/div[1]"""
+                click p """xpath///*[@id="app-content"]/div[2]/div/payments/div/payment-history/section/div/div/div/history/div/history-header/div/form/div/div/div[2]/history-filters/div/div[1]/div/div/div[6]/history-filter-product/fieldset/div/custom-select/div/span/div/div[1]"""
                 sleep 2
-                waitForSelectorAndClick p product
+                click p product
                 sleep 2
                 p.Keyboard.PressAsync("Escape") |> wait // close Product drop-down
                 sleep 2
