@@ -48,6 +48,9 @@ module Alior =
 
         member this.OpenNewPayment() =
             this.SignIn()
+            // scrolling up by any amount (-1px in this case) makes the top menu appear (if it's hidden)
+            p.EvaluateExpressionAsync("window.scrollBy(0, -1)") |> wait
+            sleep 2
             try
                 // go to Dashboard (aka. home page) first, if you're already on "Payments page" you can't click "New payment"
                 click p "xpath///*[contains(text(),'Dashboard')]"
@@ -71,33 +74,24 @@ module Alior =
             this.OpenNewPayment()
             sleep 2 // if I don't wait before clicking the drop down it will not expand
             click p "xpath///accounts-select"
-            let drop_down = p.WaitForSelectorAsync("xpath///accounts-select") |> runSync
-            transfer.FromAccount      |> fun x -> clickSelector $"xpath/(.//*[contains(text(), '{x}')])[last()]" drop_down
+            let accountsDropdown = p.WaitForSelectorAsync("xpath///accounts-select") |> runSync
+            clickSelector $"xpath/(.//*[contains(text(), '{transfer.FromAccount}')])[last()]" accountsDropdown
             transfer.ReceiverName     |> typet p "xpath///*[@id='destination.name']"
             transfer.ReceiverAccount  |> typet p "xpath///*[@id='account_number']"
             transfer.Amount |> string |> typet p "xpath///*[@id='amount.value']"
             transfer.TransferText     |> typet p "xpath///*[@id='title']"
 
             if isTest |> not then
-                // sleep 1 since I can't use `wait for xpath` - at lest I need a better xpath for `wait for xpath` to work
-                sleep 1
-                p.QuerySelectorAllAsync("xpath///button")
-                |> runSync
-                |> Array.filter (fun x -> x.QuerySelectorAllAsync("xpath/.//*[contains(text(), 'Next')]").Result.Length = 1 )
-                |> Array.exactlyOne
-                |> clickElement
-
-                let waitingForDomesticTransferFinish = p.WaitForSelectorAsync("xpath///*[contains(text(),'Domestic transfer submitted.')]") |> Async.AwaitTask |> Async.Ignore |> Async.StartAsTask :> Task
-                let waitingForInternalTransferFinish = task {
-                    let! s = p.WaitForSelectorAsync("xpath///*[contains(text(),'Confirm')]")
-                    sleep 2
-                    do! s.ClickAsync()
+                sleep 2 // we need to wait otherwise we can't click 'Next'
+                click p "xpath///button/*[contains(text(),'Next')]"
+                // domestic transfers can be confirmed/discarded with phone
+                // internal transfers are confirmed with a button automatically
+                let domesticTranFin = p.WaitForSelectorAsync("xpath///*[contains(text(),'Domestic transfer submitted.')]") :> Task
+                let internalTranFin = task {
+                    click p "xpath///*[contains(text(),'Confirm')]"
                     // after internal transfers it seems we're back at the "Create transfer page"
-                    do p.WaitForSelectorAsync("xpath///*[contains(text(),'Create domestic transfer')]") |> ignore
-                }
-                let x = waitingForInternalTransferFinish :> Task
-                System.Threading.Tasks.Task.WaitAny([|waitingForDomesticTransferFinish; x|], 30 * 1000) |> ignore
-
+                    do! p.WaitForSelectorAsync("xpath///*[contains(text(),'Create domestic transfer')]") :> Task } :> Task
+                Task.WaitAny([|domesticTranFin; internalTranFin|], TimeSpan.FromSeconds 30) |> ignore
                 sleep 2
             else
                 printfn "Test mode - not sending the transfer"
@@ -147,14 +141,9 @@ module Alior =
             clickSelector $"xpath/(.//*[contains(text(), '{month}')])[last()]" monthPeriodDropDown
 
             if isTest |> not then
-                p.QuerySelectorAllAsync("xpath///button")
-                |> runSync
-                |> Array.filter (fun x -> x.QuerySelectorAllAsync("xpath/.//*[contains(text(), 'Next')]").Result.Length = 1 )
-                |> Array.exactlyOne
-                |> clickElement
-
+                sleep 2 // we need to wait otherwise we can't click 'Next'
+                click p "xpath///button/*[contains(text(),'Next')]"
                 // confirm/discard with phone here
-
                 p.WaitForSelectorAsync("xpath///*[contains(text(),'Tax transfer sent')]") |> wait
                 sleep 2
             else
