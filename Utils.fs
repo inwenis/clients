@@ -9,20 +9,16 @@ module Utils =
     let sleep x = x |> TimeSpan.FromSeconds |> Thread.Sleep
 
     let waitForSelectorAndClick (p:IPage) xpath =
-        let s = p.WaitForSelectorAsync(xpath).Result
-        s.ClickAsync().Wait()
+        p.WaitForSelectorAsync(xpath).Result.ClickAsync().Wait()
 
-    let waitForSelectorAndType (page:IPage) xpath text =
-        let e = page.WaitForSelectorAsync(xpath).Result
-        e.TypeAsync(text).Wait()
+    let waitForSelectorAndType (p:IPage) xpath text =
+        p.WaitForSelectorAsync(xpath).Result.TypeAsync(text).Wait()
 
-    let wait (t:Task<'a>) = t.Wait()
-    let wait2 (t:Task) = t.Wait()
-    let run_sync (t:Task<'a>) = t.Result
+    let wait (t:Task) = t.Wait()
+    let runSync (t:Task<'a>) = t.Result
 
     let clickElement (e:IElementHandle) =
-        e.ClickAsync() |> wait2
+        e.ClickAsync() |> wait
 
     let clickSelector xpath (e:IElementHandle) =
-        let x = e.WaitForSelectorAsync(xpath).Result
-        x.ClickAsync().Wait()
+        e.WaitForSelectorAsync(xpath).Result.ClickAsync().Wait()

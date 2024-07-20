@@ -34,8 +34,8 @@ module Alior =
             if signedIn |> not then
                 p <-
                     let l_options = new LaunchOptions(Headless = false, DefaultViewport = ViewPortOptions())
-                    let b = Puppeteer.LaunchAsync(l_options) |> run_sync
-                    b.PagesAsync() |> run_sync |> Array.exactlyOne
+                    let b = Puppeteer.LaunchAsync(l_options) |> runSync
+                    b.PagesAsync() |> runSync |> Array.exactlyOne
                 p.GoToAsync("https://system.aliorbank.pl/sign-in", timeout=60 * 1000) |> wait
                 waitForSelectorAndType p "xpath///input[@id='login']" (username ())
                 waitForSelectorAndClick p "xpath///button[@title='Next']"
@@ -71,7 +71,7 @@ module Alior =
             this.OpenNewPayment()
             sleep 2 // if I don't wait before clicking the drop down it will not expand
             waitForSelectorAndClick p "xpath///accounts-select"
-            let drop_down = p.WaitForSelectorAsync("xpath///accounts-select") |> run_sync
+            let drop_down = p.WaitForSelectorAsync("xpath///accounts-select") |> runSync
             transfer.FromAccount      |> fun x -> clickSelector $"xpath/(.//*[contains(text(), '{x}')])[last()]" drop_down
             transfer.ReceiverName     |> waitForSelectorAndType p "xpath///*[@id='destination.name']"
             transfer.ReceiverAccount  |> waitForSelectorAndType p "xpath///*[@id='account_number']"
@@ -82,7 +82,7 @@ module Alior =
                 // sleep 1 since I can't use `wait for xpath` - at lest I need a better xpath for `wait for xpath` to work
                 sleep 1
                 p.QuerySelectorAllAsync("xpath///button")
-                |> run_sync
+                |> runSync
                 |> Array.filter (fun x -> x.QuerySelectorAllAsync("xpath/.//*[contains(text(), 'Next')]").Result.Length = 1 )
                 |> Array.exactlyOne
                 |> clickElement
@@ -113,7 +113,7 @@ module Alior =
             waitForSelectorAndClick p "xpath///*[contains(text(),'Tax transfer')]"
             sleep 2
 
-            let fromAccountDropDown = p.WaitForSelectorAsync("xpath///accounts-select") |> run_sync
+            let fromAccountDropDown = p.WaitForSelectorAsync("xpath///accounts-select") |> runSync
             clickElement fromAccountDropDown
             fromAccountDropDown |> clickSelector $"xpath/(.//*[contains(text(), '{transfer.FromAccount}')])[last()]"
 
@@ -128,19 +128,19 @@ module Alior =
             sleep 1
 
 
-            let periodDropDown = p.QuerySelectorAllAsync("xpath///custom-select[@class='obligation-period-dropdown']").Result.[0]
+            let periodDropDown = p.QuerySelectorAllAsync("xpath///custom-select[@class='obligation-period-dropdown']") |> runSync |> Array.head
             clickElement periodDropDown
             sleep 1
             clickSelector $"xpath/(.//*[contains(text(), 'Month')])[last()]" periodDropDown
             sleep 1
             // after selecting 'Month' the "Select month" drop-down appears
-            let monthPeriodDropDown = p.QuerySelectorAsync("xpath/(//custom-select[@class='obligation-period-dropdown'])[last()]").Result
+            let monthPeriodDropDown = p.QuerySelectorAsync("xpath/(//custom-select[@class='obligation-period-dropdown'])[last()]") |> runSync
 
-            let e = p.WaitForSelectorAsync("xpath///*[@id='obligation_year']").Result
+            let e = p.WaitForSelectorAsync("xpath///*[@id='obligation_year']") |> runSync
             // press backspace 4 times to remove year that is there by default
             for _ in [1..4] do
-                e.PressAsync("Backspace").Wait()
-            e.TypeAsync(year).Wait()
+                e.PressAsync("Backspace") |> wait
+            e.TypeAsync(year) |> wait
             sleep 1
 
             clickElement monthPeriodDropDown
@@ -148,7 +148,7 @@ module Alior =
 
             if isTest |> not then
                 p.QuerySelectorAllAsync("xpath///button")
-                |> run_sync
+                |> runSync
                 |> Array.filter (fun x -> x.QuerySelectorAllAsync("xpath/.//*[contains(text(), 'Next')]").Result.Length = 1 )
                 |> Array.exactlyOne
                 |> clickElement
@@ -163,8 +163,8 @@ module Alior =
         member this.GetP() = p
 
         member this.Scrape() =
-            let getAttributeNames = fun (d:IElementHandle) -> d.EvaluateFunctionAsync<string[]>("node => Array.from(node.attributes).map(x => x.name)").Result
-            let getAttributeValue = fun name (d:IElementHandle) -> d.EvaluateFunctionAsync<string>($"node => node.getAttribute('{name}')").Result
+            let getAttributeNames = fun (d:IElementHandle) -> d.EvaluateFunctionAsync<string[]>("node => Array.from(node.attributes).map(x => x.name)") |> runSync
+            let getAttributeValue = fun name (d:IElementHandle) -> d.EvaluateFunctionAsync<string>($"node => node.getAttribute('{name}')") |> runSync
             let getAttributes = fun (d:IElementHandle) ->
                 let attributeNames = getAttributeNames d
                 attributeNames
@@ -196,7 +196,7 @@ module Alior =
             // click Product
             waitForSelectorAndClick p "xpath///div[@id='list_product']/parent::div/parent::div"
             sleep 1
-            let products = p.QuerySelectorAllAsync("xpath///*[contains(@id,'option_product')]") |> Async.AwaitTask |> Async.RunSynchronously
+            let products = p.QuerySelectorAllAsync("xpath///*[contains(@id,'option_product')]") |> runSync
 
             // products must be accessed by xpaths because the DOM nodes are recreated with every opening of the "Product" drop-down
             let productsXpaths =
@@ -209,7 +209,6 @@ module Alior =
             // click Product to close dropdown
             waitForSelectorAndClick p "xpath///div[@id='list_product']/parent::div/parent::div"
 
-            let mutable files = []
             // transactions must be downloaded per product separately. If all products are selected internal transaction are messed up.
             for product in productsXpaths do
                 // click Product
@@ -218,7 +217,7 @@ module Alior =
 
                 waitForSelectorAndClick p product
                 sleep 2
-                p.Keyboard.PressAsync("Escape").Wait() // close Product drop-down
+                p.Keyboard.PressAsync("Escape") |> wait // close Product drop-down
                 sleep 2
 
                 // Apply filters
@@ -236,7 +235,7 @@ module Alior =
                 sleep 2
                 waitForSelectorAndClick p product
                 sleep 2
-                p.Keyboard.PressAsync("Escape").Wait() // close Product drop-down
+                p.Keyboard.PressAsync("Escape") |> wait // close Product drop-down
                 sleep 2
 
             let home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)
