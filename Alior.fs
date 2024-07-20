@@ -193,9 +193,9 @@ module Alior =
             click p """xpath///*[@id="option_document_type_CSV"]"""
             sleep 2
 
-            // click Product
-            click p "xpath///div[@id='list_product']/parent::div/parent::div"
-            sleep 1
+            let productDropDown = "xpath///div[@id='list_product']/parent::div/parent::div"
+            click p productDropDown
+            sleep 2
             let products = p.QuerySelectorAllAsync("xpath///*[contains(@id,'option_product')]") |> runSync
 
             // products must be accessed by xpaths because the DOM nodes are recreated with every opening of the "Product" drop-down
@@ -206,35 +206,30 @@ module Alior =
                 |> List.map (fun x -> x.["id"])
                 |> List.map (fun x -> $"""xpath///*[@id="{x}"]""")
 
-            // click Product to close dropdown
-            click p "xpath///div[@id='list_product']/parent::div/parent::div"
+            click p productDropDown // close drop-down
+            sleep 2
 
             // transactions must be downloaded per product separately. If all products are selected internal transaction are messed up.
             for product in productsXpaths do
-                click p "xpath///div[@id='list_product']/parent::div/parent::div" // click Product drop-down
+                click p productDropDown
                 sleep 2
-
                 click p product
                 sleep 2
-                p.Keyboard.PressAsync("Escape") |> wait // close Product drop-down
+                click p productDropDown // close drop-down
                 sleep 2
 
-                // Apply filters
-                click p """xpath///*[@id="app-content"]/div[2]/div/payments/div/payment-history/section/div/div/div/history/div/history-header/div/form/div/div/div[2]/history-filters/div/div[1]/div/div/div[9]/button-cta/button"""
+                click p "xpath///*[contains(text(),'Apply filters')]"
                 sleep 2
 
-                // click Download
-                click p """xpath///*[@id="app-content"]/div[2]/div/payments/div/payment-history/section/div/div/div/history/div/history-header/div/form/div/div/div[2]/history-filters/div/div[1]/div/div/div[8]/history-export/div/div/div[3]/button-cta/button/span"""
+                click p "xpath///*[contains(text(),'Download')]"
                 sleep 5
                 printfn "File should be ready in \"Downloads\" folder"
 
-                // deselect product
-                // click Product
-                click p """xpath///*[@id="app-content"]/div[2]/div/payments/div/payment-history/section/div/div/div/history/div/history-header/div/form/div/div/div[2]/history-filters/div/div[1]/div/div/div[6]/history-filter-product/fieldset/div/custom-select/div/span/div/div[1]"""
+                click p productDropDown
                 sleep 2
-                click p product
+                click p product  // deselect current product
                 sleep 2
-                p.Keyboard.PressAsync("Escape") |> wait // close Product drop-down
+                click p productDropDown // close drop-down
                 sleep 2
 
             let home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)
