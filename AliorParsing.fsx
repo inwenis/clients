@@ -22,22 +22,22 @@ type TransactionsAliorCsv = CsvProvider<
 """, ";", Quote='`'>
 
 type TransactionAlior = {
-    TransactionDate: DateTimeOffset
-    AccountingDate: DateTimeOffset
-    SenderName: string
-    ReceiverName: string
-    TransactionText: string
-    Amount: decimal
-    TransactionCurrency: string
+    TransactionDate:         DateOnly
+    AccountingDate:          DateOnly
+    SenderName:              string
+    ReceiverName:            string
+    TransactionText:         string
+    Amount:                  decimal
+    TransactionCurrency:     string
     AmountInAccountCurrency: decimal
-    AccountCurrency: string
-    SenderAccountNumber: string
-    ReceiverAccountNumber: string
+    AccountCurrency:         string
+    SenderAccountNumber:     string
+    ReceiverAccountNumber:   string
 }
 
-type AliorRowWithSourceFileInfo<'T> = {
+type AliorTransactionWithSourceFileInfo<'T> = {
     File: string
-    Data: 'T
+    Transaction: 'T
     LineNumber: int
     Product: string
 }
@@ -51,24 +51,24 @@ let parseFile filePath =
     |> TransactionsAliorCsv.Parse
     |> fun x -> x.Rows
     |> List.ofSeq
-    |> List.mapi (fun i t -> { File = filePath; Data = t; LineNumber = i + 3; Product = product }) // +3 to align with line number in file
+    |> List.mapi (fun i t -> { File = filePath; Transaction = t; LineNumber = i + 3; Product = product }) // +3 to align with line number in file
 
-let parseAgain (x:AliorRowWithSourceFileInfo<TransactionsAliorCsv.Row>) =
+let parseAgain (x:AliorTransactionWithSourceFileInfo<TransactionsAliorCsv.Row>) =
     let parsedAgain = {
-        TransactionDate =         x.Data.``Data transakcji`` |> fun x -> DateTimeOffset.ParseExact(x, "dd-MM-yyyy", null) // todo - set this to polish culture so the offset is always correct, it's to late for me to do it r/n
-        AccountingDate =          x.Data.``Data księgowania`` |> fun x -> DateTimeOffset.ParseExact(x, "dd-MM-yyyy", null)
-        SenderName =              x.Data.``Nazwa nadawcy``
-        ReceiverName =            x.Data.``Nazwa odbiorcy``
-        TransactionText =         x.Data.``Szczegóły transakcji``
-        Amount =                  x.Data.``Kwota operacji`` |> fun x -> decimal (x.Replace(",", "."))
-        TransactionCurrency =     x.Data.``Waluta operacji``
-        AmountInAccountCurrency = x.Data.``Kwota w walucie rachunku`` |> fun x -> decimal (x.Replace(",", "."))
-        AccountCurrency =         x.Data.``Waluta rachunku``
-        SenderAccountNumber =     x.Data.``Numer rachunku nadawcy``
-        ReceiverAccountNumber =   x.Data.``Numer rachunku odbiorcy`` } : TransactionAlior
+        TransactionDate =         x.Transaction.``Data transakcji`` |> fun x -> DateOnly.ParseExact(x, "dd-MM-yyyy", null)
+        AccountingDate =          x.Transaction.``Data księgowania`` |> fun x -> DateOnly.ParseExact(x, "dd-MM-yyyy", null)
+        SenderName =              x.Transaction.``Nazwa nadawcy``
+        ReceiverName =            x.Transaction.``Nazwa odbiorcy``
+        TransactionText =         x.Transaction.``Szczegóły transakcji``
+        Amount =                  x.Transaction.``Kwota operacji`` |> fun x -> decimal (x.Replace(",", "."))
+        TransactionCurrency =     x.Transaction.``Waluta operacji``
+        AmountInAccountCurrency = x.Transaction.``Kwota w walucie rachunku`` |> fun x -> decimal (x.Replace(",", "."))
+        AccountCurrency =         x.Transaction.``Waluta rachunku``
+        SenderAccountNumber =     x.Transaction.``Numer rachunku nadawcy``
+        ReceiverAccountNumber =   x.Transaction.``Numer rachunku odbiorcy`` } : TransactionAlior
     {
         File = x.File
-        Data = parsedAgain
+        Transaction = parsedAgain
         LineNumber = x.LineNumber
         Product = x.Product
     }
@@ -82,4 +82,4 @@ let allRows =
 
 
 allRows
-|> List.filter (fun r -> r.Data.TransactionDate <> r.Data.AccountingDate)
+|> List.filter (fun r -> r.Transaction.TransactionDate <> r.Transaction.AccountingDate)
