@@ -1,6 +1,6 @@
 #r "nuget: FSharp.Data, 6.4.0"
+#r "nuget: PuppeteerSharp, 18.0.3"
 
-#load "Alior.fs"
 #load "Utils.fs"
 
 open System
@@ -8,7 +8,6 @@ open System.Text
 open System.IO
 open FSharp.Data
 
-open clients
 open clients.Utils
 
 let home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)
