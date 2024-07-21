@@ -26,3 +26,12 @@ module Utils =
         let options = new PuppeteerSharp.Input.TypeOptions()
         options.Delay <- TimeSpan.FromSeconds(1).TotalMilliseconds |> int
         p.WaitForSelectorAsync(xpath) |> runSync |> fun x -> x.TypeAsync(text, options) |> wait
+
+    let getAttributeNames = fun (d:IElementHandle) -> d.EvaluateFunctionAsync<string[]>("node => Array.from(node.attributes).map(x => x.name)") |> runSync
+    let getAttributeValue = fun name (d:IElementHandle) -> d.EvaluateFunctionAsync<string>($"node => node.getAttribute('{name}')") |> runSync
+    let getAttributes = fun (d:IElementHandle) ->
+        let attributeNames = getAttributeNames d
+        attributeNames
+        |> List.ofArray
+        |> List.map (fun x -> x, getAttributeValue x d)
+        |> Map.ofList
