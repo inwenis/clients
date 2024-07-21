@@ -23,19 +23,21 @@ module Alior =
     | All
     | OtherRange of DateOnly * DateOnly
 
-    type AliorClient private (username, password, p, signedIn, isTest) =
+    type AliorClient private (usernameFun, passwordFun, page, signedIn, isTest) =
         let mutable signedIn = signedIn
-        let mutable p : IPage = p
+        let mutable p : IPage = page
         do
             printfn "downloading chromium"
             let bf = new BrowserFetcher()
             bf.DownloadAsync() |> wait
 
-        new(username, password, p, isTest) =
-            AliorClient(username, password, p, true, isTest)
-
-        new(username, password, isTest) =
-            AliorClient(username, password, null, false, isTest)
+        new(username, password, ?page, ?isTest) =
+            let page, isAlreadySingedIn =
+                match page with
+                | Some x -> x, true
+                | None -> null, false
+            let isTest = isTest |> Option.defaultValue false
+            AliorClient(username, password, page, isAlreadySingedIn, isTest)
 
         member this.SignIn() =
             if signedIn |> not then
@@ -44,9 +46,9 @@ module Alior =
                     let b = Puppeteer.LaunchAsync(l_options) |> runSync
                     b.PagesAsync() |> runSync |> Array.exactlyOne
                 p.GoToAsync("https://system.aliorbank.pl/sign-in", timeout=60 * 1000) |> wait
-                typet p "xpath///input[@id='login']" (username ())
+                typet p "xpath///input[@id='login']" (usernameFun ())
                 click p "xpath///button[@title='Next']"
-                typet p "xpath///input[@id='password']" (password ())
+                typet p "xpath///input[@id='password']" (passwordFun ())
                 click p "xpath///button[@id='password-submit']"
                 click p "xpath///button[contains(text(),'One-time access')]"
                 p.WaitForSelectorAsync("xpath///*[contains(text(),'My wallet')]") |> wait // we wait for the main page to load after logging in
@@ -158,21 +160,17 @@ module Alior =
 
         member this.GetP() = p
 
-        member this.Scrape(period, count) =
-            let getAttributeNames = fun (d:IElementHandle) -> d.EvaluateFunctionAsync<string[]>("node => Array.from(node.attributes).map(x => x.name)") |> runSync
-            let getAttributeValue = fun name (d:IElementHandle) -> d.EvaluateFunctionAsync<string>($"node => node.getAttribute('{name}')") |> runSync
-            let getAttributes = fun (d:IElementHandle) ->
-                let attributeNames = getAttributeNames d
-                attributeNames
-                |> List.ofArray
-                |> List.map (fun x -> x, getAttributeValue x d)
-                |> Map.ofList
-
+        member this.Scrape(?period, ?count) =
             let period =
                 match period with
                 // we can't download transactions using the option 'All' but we can use 'Other range' with a wide range
-                | All -> OtherRange(DateOnly.Parse("01.01.1990"), DateTime.Today |> DateOnly.FromDateTime)
-                | x -> x
+                | Some All -> OtherRange(DateOnly.Parse("01.01.1990"), DateTime.Today |> DateOnly.FromDateTime)
+                | Some x -> x
+                | None -> LastYear
+            let count =
+                match count with
+                | Some x -> x
+                | None -> 100 // by default set count to 100 meaning we scrape all products
 
             this.SignIn()
             // go to Dashboard (aka. home page) first, if you're already on "Payments page" you can't click "New payment"

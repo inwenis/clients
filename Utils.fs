@@ -29,3 +29,12 @@ module Utils =
         p.WaitForSelectorAsync(xpath) |> runSync |> fun x -> x.TypeAsync(text, options) |> wait
 
     let extract regex text = Regex.Match(text, regex).Groups.[0].Value
+
+    let getAttributeNames = fun (d:IElementHandle) -> d.EvaluateFunctionAsync<string[]>("node => Array.from(node.attributes).map(x => x.name)") |> runSync
+    let getAttributeValue = fun name (d:IElementHandle) -> d.EvaluateFunctionAsync<string>($"node => node.getAttribute('{name}')") |> runSync
+    let getAttributes = fun (d:IElementHandle) ->
+        let attributeNames = getAttributeNames d
+        attributeNames
+        |> List.ofArray
+        |> List.map (fun x -> x, getAttributeValue x d)
+        |> Map.ofList
