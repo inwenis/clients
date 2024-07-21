@@ -21,9 +21,23 @@ type TransactionsAliorCsv = CsvProvider<
 26-07-2022;26-07-2022;John Doe;John Doe;Own (internal) transfer;123,64;PLN;123,64;PLN;91 1130 0007 0080 2394 3520 0002;91 1130 0007 0080 2394 3520 0002;
 """, ";", Quote='`'>
 
-type AliorParsedRow = {
+type TransactionAlior = {
+    TransactionDate: DateTimeOffset
+    AccountingDate: DateTimeOffset
+    SenderName: string
+    ReceiverName: string
+    TransactionText: string
+    Amount: decimal
+    TransactionCurrency: string
+    AmountInAccountCurrency: decimal
+    AccountCurrency: string
+    SenderAccountNumber: string
+    ReceiverAccountNumber: string
+}
+
+type AliorRowWithSourceFileInfo<'T> = {
     File: string
-    Data: TransactionsAliorCsv.Row
+    Data: 'T
     LineNumber: int
     Product: string
 }
@@ -39,12 +53,33 @@ let parseFile filePath =
     |> List.ofSeq
     |> List.mapi (fun i t -> { File = filePath; Data = t; LineNumber = i + 3; Product = product }) // +3 to align with line number in file
 
+let parseAgain (x:AliorRowWithSourceFileInfo<TransactionsAliorCsv.Row>) =
+    let parsedAgain = {
+        TransactionDate =         x.Data.``Data transakcji`` |> fun x -> DateTimeOffset.ParseExact(x, "dd-MM-yyyy", null) // todo - set this to polish culture so the offset is always correct, it's to late for me to do it r/n
+        AccountingDate =          x.Data.``Data księgowania`` |> fun x -> DateTimeOffset.ParseExact(x, "dd-MM-yyyy", null)
+        SenderName =              x.Data.``Nazwa nadawcy``
+        ReceiverName =            x.Data.``Nazwa odbiorcy``
+        TransactionText =         x.Data.``Szczegóły transakcji``
+        Amount =                  x.Data.``Kwota operacji`` |> fun x -> decimal (x.Replace(",", "."))
+        TransactionCurrency =     x.Data.``Waluta operacji``
+        AmountInAccountCurrency = x.Data.``Kwota w walucie rachunku`` |> fun x -> decimal (x.Replace(",", "."))
+        AccountCurrency =         x.Data.``Waluta rachunku``
+        SenderAccountNumber =     x.Data.``Numer rachunku nadawcy``
+        ReceiverAccountNumber =   x.Data.``Numer rachunku odbiorcy`` } : TransactionAlior
+    {
+        File = x.File
+        Data = parsedAgain
+        LineNumber = x.LineNumber
+        Product = x.Product
+    }
+
 let allRows =
     Directory.EnumerateFiles(downloads, "Historia*.csv")
     |> List.ofSeq
     |> List.map (fun f -> parseFile f)
     |> List.collect id
+    |> List.map (fun x -> parseAgain x)
 
 
 allRows
-|> List.filter (fun r -> r.Data.``Data księgowania`` <> r.Data.``Data transakcji``)
+|> List.filter (fun r -> r.Data.TransactionDate <> r.Data.AccountingDate)
