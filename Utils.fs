@@ -21,3 +21,8 @@ module Utils =
 
     let typet (p:IPage) xpath text =
         p.WaitForSelectorAsync(xpath) |> runSync |> fun x -> x.TypeAsync(text) |> wait
+
+    let typeSlow (p:IPage) xpath text =
+        let options = new PuppeteerSharp.Input.TypeOptions()
+        options.Delay <- TimeSpan.FromSeconds(1).TotalMilliseconds |> int
+        p.WaitForSelectorAsync(xpath) |> runSync |> fun x -> x.TypeAsync(text, options) |> wait

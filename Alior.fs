@@ -14,7 +14,14 @@ Billing account name is long to align with head,Receiver3,   12 1234 1234 12,Tit
 Billing account name is long to align with head,Receiver2,   12 1234 1234 12,Title of tra, 27.95,2023-03-01T00:00:00.0000000+02:00,Executed,Tax
 """>
 
+
+
 module Alior =
+
+    type ScrapePeriod =
+    | LastYear
+    | All
+    | OtherRange of DateOnly * DateOnly
 
     type AliorClient private (username, password, p, signedIn, isTest) =
         let mutable signedIn = signedIn
@@ -151,7 +158,7 @@ module Alior =
 
         member this.GetP() = p
 
-        member this.Scrape() =
+        member this.Scrape(period, count) =
             let getAttributeNames = fun (d:IElementHandle) -> d.EvaluateFunctionAsync<string[]>("node => Array.from(node.attributes).map(x => x.name)") |> runSync
             let getAttributeValue = fun name (d:IElementHandle) -> d.EvaluateFunctionAsync<string>($"node => node.getAttribute('{name}')") |> runSync
             let getAttributes = fun (d:IElementHandle) ->
@@ -160,6 +167,12 @@ module Alior =
                 |> List.ofArray
                 |> List.map (fun x -> x, getAttributeValue x d)
                 |> Map.ofList
+
+            let period =
+                match period with
+                // we can't download transactions using the option 'All' but we can use 'Other range' with a wide range
+                | All -> OtherRange(DateOnly.Parse("01.01.1990"), DateTime.Today |> DateOnly.FromDateTime)
+                | x -> x
 
             this.SignIn()
             // go to Dashboard (aka. home page) first, if you're already on "Payments page" you can't click "New payment"
@@ -173,8 +186,18 @@ module Alior =
             sleep 2
             // click Period
             click p "xpath///div[@id='list_time']/parent::div/parent::div"
-            // todo - make this a moving range, picking just last year - see if we lose transaction on year change here
-            click p """xpath///*[@id="option_time_LAST_YEAR"]"""
+
+            match period with
+            | LastYear -> click p """xpath///*[@id="option_time_LAST_YEAR"]"""
+            | OtherRange (from, _to) ->
+                click p """xpath///*[@id="option_time_OTHER_RANGE"]"""
+                typeSlow p "xpath///input[@id='date-from']" "0" // need to type something first, otherwise the actual date won't be typed
+                typeSlow p "xpath///input[@id='date-from']" (from.ToString("ddMMyyyy"))
+                typeSlow p "xpath///input[@id='date-to']" "0" // need to type something first, otherwise the actual date won't be typed
+                typeSlow p "xpath///input[@id='date-to']" (_to.ToString("ddMMyyyy"))
+            | _ ->
+                failwith "Not implemented"
+
             // click File type
             click p "xpath///div[@id='list_document_type']/parent::div/parent::div"
             sleep 2
@@ -199,7 +222,7 @@ module Alior =
             sleep 2
 
             // transactions must be downloaded per product separately. If all products are selected internal transaction are messed up.
-            for product in productsXpaths do
+            for product in productsXpaths |> List.truncate count do
                 click p productDropDown
                 sleep 2
                 click p product
