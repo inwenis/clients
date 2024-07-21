@@ -44,3 +44,7 @@ let allRows =
     |> List.ofSeq
     |> List.map (fun f -> parseFile f)
     |> List.collect id
+
+
+allRows
+|> List.filter (fun r -> r.Data.``Data księgowania`` <> r.Data.``Data transakcji``)
