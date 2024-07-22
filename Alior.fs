@@ -95,12 +95,16 @@ module Alior =
                 click p "xpath///button/*[contains(text(),'Next')]"
                 // domestic transfers can be confirmed/discarded with phone
                 // internal transfers are confirmed with a button automatically
-                let domesticTranFin = p.WaitForSelectorAsync("xpath///*[contains(text(),'Domestic transfer submitted.')]") :> Task
-                let internalTranFin = task {
+                let domesticTranFin = async {
+                    do! p.WaitForSelectorAsync("xpath///*[contains(text(),'Domestic transfer submitted.')]") |> Async.AwaitTask |> Async.Ignore
+                    return Some() }
+
+                let internalTranFin = async {
                     click p "xpath///*[contains(text(),'Confirm')]"
                     // after internal transfers it seems we're back at the "Create transfer page"
-                    do! p.WaitForSelectorAsync("xpath///*[contains(text(),'Create domestic transfer')]") :> Task } :> Task
-                Task.WaitAny([|domesticTranFin; internalTranFin|], TimeSpan.FromSeconds 30) |> ignore
+                    do! p.WaitForSelectorAsync("xpath///*[contains(text(),'Create domestic transfer')]") |> Async.AwaitTask |> Async.Ignore
+                    return Some() }
+                Async.Choice [internalTranFin; domesticTranFin] |> Async.RunSynchronously |> ignore
                 sleep 2
             else
                 printfn "Test mode - not sending the transfer"
