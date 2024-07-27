@@ -252,3 +252,4 @@ module Alior =
             |> List.map              (fun x -> new FileInfo(x))
             |> List.filter           (fun x -> DateTimeOffset.UtcNow - DateTimeOffset(x.CreationTimeUtc) < TimeSpan.FromMinutes(5))
             |> List.sortByDescending (fun x -> x.CreationTimeUtc)
+            |> List.map              (fun x -> x.FullName)
