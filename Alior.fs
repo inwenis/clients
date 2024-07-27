@@ -220,13 +220,8 @@ module Alior =
                 |> List.map (fun x -> x.["id"])
                 |> List.map (fun x -> $"""xpath///*[@id="{x}"]""")
 
-            click p productDropDown // close drop-down
-            sleep 2
-
             // transactions must be downloaded per product separately. If all products are selected internal transaction are messed up.
             for product in productsXpaths |> List.truncate count do
-                click p productDropDown
-                sleep 2
                 click p product
                 sleep 2
                 click p productDropDown // close drop-down
@@ -242,8 +237,6 @@ module Alior =
                 click p productDropDown
                 sleep 2
                 click p product  // deselect current product
-                sleep 2
-                click p productDropDown // close drop-down
                 sleep 2
 
             let home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)
