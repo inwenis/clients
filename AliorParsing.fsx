@@ -36,14 +36,21 @@ type TransactionAlior = {
 }
 
 type AliorTransactionWithSourceFileInfo<'T> = {
-    File: string
+    FullFileName: string
+    ScrapeDateTime: DateTimeOffset
+    Product: string
     Transaction: 'T
     LineNumber: int
-    Product: string
 }
 
-let parseFile filePath =
-    let lines = File.ReadAllLines(filePath, CodePagesEncodingProvider.Instance.GetEncoding(1250)) |> List.ofArray
+let parseFile fullFileName =
+    let extractDateTime (fullFileName:string) =
+        // sample file name - Historia_Operacji_2024-07-21_11-18-31.csv.CSV
+        // somehow the extension is ".csv.CSV"
+        let dateTime = Path.GetFileName fullFileName |> fun x -> x.Replace("Historia_Operacji_", "").Replace(".csv.CSV", "")
+        DateTimeOffset.ParseExact(dateTime, "yyyy-MM-dd_HH-mm-ss", null)
+
+    let lines = File.ReadAllLines(fullFileName, CodePagesEncodingProvider.Instance.GetEncoding(1250)) |> List.ofArray
     let header1 :: header2 :: rows = lines
     let product = extract "\d{26}" header1 // product aka. account number
     header2 :: rows
@@ -51,7 +58,7 @@ let parseFile filePath =
     |> TransactionsAliorCsv.Parse
     |> fun x -> x.Rows
     |> List.ofSeq
-    |> List.mapi (fun i t -> { File = filePath; Transaction = t; LineNumber = i + 3; Product = product }) // +3 to align with line number in file
+    |> List.mapi (fun i t -> { FullFileName = fullFileName; ScrapeDateTime = extractDateTime fullFileName; Transaction = t; LineNumber = i + 3; Product = product }) // +3 to align with line number in file
 
 let parseAgain (x:AliorTransactionWithSourceFileInfo<TransactionsAliorCsv.Row>) =
     let parsedAgain = {
@@ -67,10 +74,11 @@ let parseAgain (x:AliorTransactionWithSourceFileInfo<TransactionsAliorCsv.Row>) 
         SenderAccountNumber =     x.Transaction.``Numer rachunku nadawcy``
         ReceiverAccountNumber =   x.Transaction.``Numer rachunku odbiorcy`` } : TransactionAlior
     {
-        File = x.File
+        FullFileName = x.FullFileName
         Transaction = parsedAgain
         LineNumber = x.LineNumber
         Product = x.Product
+        ScrapeDateTime = x.ScrapeDateTime
     }
 
 let allRows =
