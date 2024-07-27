@@ -4,6 +4,7 @@ open System
 open System.Threading
 open System.Threading.Tasks
 open PuppeteerSharp
+open System.Text.RegularExpressions
 
 module Utils =
     let sleep x = x |> TimeSpan.FromSeconds |> Thread.Sleep
@@ -26,6 +27,8 @@ module Utils =
         let options = new PuppeteerSharp.Input.TypeOptions()
         options.Delay <- TimeSpan.FromSeconds(1).TotalMilliseconds |> int
         p.WaitForSelectorAsync(xpath) |> runSync |> fun x -> x.TypeAsync(text, options) |> wait
+
+    let extract regex text = Regex.Match(text, regex).Groups.[0].Value
 
     let getAttributeNames = fun (d:IElementHandle) -> d.EvaluateFunctionAsync<string[]>("node => Array.from(node.attributes).map(x => x.name)") |> runSync
     let getAttributeValue = fun name (d:IElementHandle) -> d.EvaluateFunctionAsync<string>($"node => node.getAttribute('{name}')") |> runSync
