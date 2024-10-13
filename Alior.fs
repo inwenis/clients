@@ -93,16 +93,17 @@ module Alior =
             if isTest |> not then
                 sleep 2 // we need to wait otherwise we can't click 'Next'
                 click p "xpath///button/*[contains(text(),'Next')]"
-                // domestic transfers can be confirmed/discarded with phone
-                // internal transfers are confirmed with a button automatically
                 let domesticTranFin = async {
+                    do! p.WaitForSelectorAsync("xpath///*[contains(text(),'Wait on authorization')]") |> Async.AwaitTask |> Async.Ignore
+                    // domestic transfers can be confirmed/discarded with phone here
                     do! p.WaitForSelectorAsync("xpath///*[contains(text(),'Domestic transfer submitted.')]") |> Async.AwaitTask |> Async.Ignore
                     return Some() }
 
                 let internalTranFin = async {
+                    sleep 2 // we need to wait otherwise the button is not clickable
+                    // internal transfers are confirmed with a button automatically
                     click p "xpath///*[contains(text(),'Confirm')]"
-                    // after internal transfers it seems we're back at the "Create transfer page"
-                    do! p.WaitForSelectorAsync("xpath///*[contains(text(),'Create domestic transfer')]") |> Async.AwaitTask |> Async.Ignore
+                    do! p.WaitForSelectorAsync("xpath///*[contains(text(),'Domestic transfer submitted.')]") |> Async.AwaitTask |> Async.Ignore
                     return Some() }
                 Async.Choice [internalTranFin; domesticTranFin] |> Async.RunSynchronously |> ignore
                 sleep 2
