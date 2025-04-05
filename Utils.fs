@@ -38,3 +38,5 @@ module Utils =
         |> List.ofArray
         |> List.map (fun x -> x, getAttributeValue x d)
         |> Map.ofList
+
+    let regexRemove   regex                      text = Regex.Replace(text, regex, String.Empty)

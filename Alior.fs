@@ -200,10 +200,13 @@ module Alior =
             | LastYear -> click p """xpath///*[@id="option_time_LAST_YEAR"]"""
             | OtherRange (from, _to) ->
                 click p """xpath///*[@id="option_time_OTHER_RANGE"]"""
-                typeSlow p "xpath///input[@id='date-from']" "0" // need to type something first, otherwise the actual date won't be typed
-                typeSlow p "xpath///input[@id='date-from']" (from.ToString("ddMMyyyy"))
-                typeSlow p "xpath///input[@id='date-to']" "0" // need to type something first, otherwise the actual date won't be typed
-                typeSlow p "xpath///input[@id='date-to']" (_to.ToString("ddMMyyyy"))
+                // We need to type something first, otherwise the actual date won't be typed hence we type "0".
+                // When setting dates with `document.querySelector("input[#date-from").value = '...' the form claims dates are invalid.
+                // The format of dates depends on Windows's ShortDate format - hence we use .ToShortDateString() and remove all non-digit characters.
+                typeSlow p "xpath///input[@id='date-from']" "0"
+                typeSlow p "xpath///input[@id='date-from']" (from.ToShortDateString() |> regexRemove "\D" )
+                typeSlow p "xpath///input[@id='date-to']" "0"
+                typeSlow p "xpath///input[@id='date-to']" (_to.ToShortDateString() |> regexRemove "\D")
             | _ ->
                 failwith "Not implemented"
 
