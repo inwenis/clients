@@ -7,7 +7,7 @@ open PuppeteerSharp
 open System.Text.RegularExpressions
 
 module Utils =
-    let sleep x = x |> TimeSpan.FromSeconds |> Thread.Sleep
+    let sleep x = x |> fun y -> TimeSpan.FromSeconds(seconds=y) |> Thread.Sleep
 
     let wait (t:Task) = t.Wait()
 
@@ -25,7 +25,7 @@ module Utils =
 
     let typeSlow (p:IPage) xpath text =
         let options = new PuppeteerSharp.Input.TypeOptions()
-        options.Delay <- TimeSpan.FromSeconds(1).TotalMilliseconds |> int
+        options.Delay <- TimeSpan.FromSeconds(seconds=1).TotalMilliseconds |> int
         p.WaitForSelectorAsync(xpath) |> runSync |> fun x -> x.TypeAsync(text, options) |> wait
 
     let extract regex text = Regex.Match(text, regex).Groups.[0].Value

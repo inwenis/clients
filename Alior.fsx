@@ -15,7 +15,7 @@ open clients.Alior
 let username () = System.Environment.GetEnvironmentVariable("ALIOR_USERNAME")
 let password () = System.Environment.GetEnvironmentVariable("ALIOR_PASSWORD")
 
-let ac = AliorClient(username, password, true)
+let ac = AliorClient(username, password, isTest=true)
 // #load "Alior.fs"
 //open clients.Alior
 //let ac = AliorClient(username, password, ac.GetP(), true)

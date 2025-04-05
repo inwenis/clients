@@ -31,6 +31,11 @@ module Alior =
             let bf = new BrowserFetcher()
             bf.DownloadAsync() |> wait
 
+        /// <summary>Creates Alior client</summary>
+        /// <param name="username"></param>
+        /// <param name="password"></param>
+        /// <param name="page"></param>
+        /// <param name="isTest">default to 'false'. If 'true' the client will not send transfers.</param>
         new(username, password, ?page, ?isTest) =
             let page, isAlreadySingedIn =
                 match page with
@@ -244,6 +249,6 @@ module Alior =
             Directory.EnumerateFiles(Path.Combine(home,"Downloads"), "*.csv")
             |> List.ofSeq
             |> List.map              (fun x -> new FileInfo(x))
-            |> List.filter           (fun x -> DateTimeOffset.UtcNow - DateTimeOffset(x.CreationTimeUtc) < TimeSpan.FromMinutes(5))
+            |> List.filter           (fun x -> DateTimeOffset.UtcNow - DateTimeOffset(x.CreationTimeUtc) < TimeSpan.FromMinutes(minutes=5))
             |> List.sortByDescending (fun x -> x.CreationTimeUtc)
             |> List.map              (fun x -> x.FullName)
