@@ -48,7 +48,7 @@ module AliorParsing =
 
         let lines = File.ReadAllLines(fullFileName, CodePagesEncodingProvider.Instance.GetEncoding(1250)) |> List.ofArray
         let header1 :: header2 :: rows = lines
-        let product = extract "\d{26}" header1 // product aka. account number
+        let product = regexExtract "\d{26}" header1 // product aka. account number
         header2 :: rows
         |> String.concat "\n"
         |> TransactionsAliorCsv.Parse

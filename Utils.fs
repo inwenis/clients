@@ -28,8 +28,6 @@ module Utils =
         options.Delay <- TimeSpan.FromSeconds(seconds=1).TotalMilliseconds |> int
         p.WaitForSelectorAsync(xpath) |> runSync |> fun x -> x.TypeAsync(text, options) |> wait
 
-    let extract regex text = Regex.Match(text, regex).Groups.[0].Value
-
     let getAttributeNames = fun (d:IElementHandle) -> d.EvaluateFunctionAsync<string[]>("node => Array.from(node.attributes).map(x => x.name)") |> runSync
     let getAttributeValue = fun name (d:IElementHandle) -> d.EvaluateFunctionAsync<string>($"node => node.getAttribute('{name}')") |> runSync
     let getAttributes = fun (d:IElementHandle) ->
@@ -39,4 +37,8 @@ module Utils =
         |> List.map (fun x -> x, getAttributeValue x d)
         |> Map.ofList
 
+    let regexExtract  regex                      text = Regex.Match(text, regex).Value
+    let regexExtractg regex                      text = Regex.Match(text, regex).Groups.[1].Value
+    let regexExtracts regex                      text = Regex.Matches(text, regex) |> Seq.map (fun x -> x.Value)
+    let regexReplace  regex (replacement:string) text = Regex.Replace(text, regex, replacement)
     let regexRemove   regex                      text = Regex.Replace(text, regex, String.Empty)
