@@ -47,7 +47,8 @@ module Alior =
         member this.SignIn() =
             if signedIn |> not then
                 p <-
-                    let l_options = new LaunchOptions(Headless = false, DefaultViewport = ViewPortOptions())
+                    // many xpaths depend on English texts so we need to ensure we get the English version of the page hence "--lang=en-GB"
+                    let l_options = new LaunchOptions(Headless = false, DefaultViewport = ViewPortOptions(), Args = [|"--lang=en-GB"|])
                     let b = Puppeteer.LaunchAsync(l_options) |> runSync
                     b.PagesAsync() |> runSync |> Array.exactlyOne
                 p.GoToAsync("https://system.aliorbank.pl/sign-in", timeout=60 * 1000) |> wait
