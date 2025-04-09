@@ -25,4 +25,4 @@ let ac = AliorClient(username, password, isTest=true)
 // let transferTax = Transfers.Row("", "asdf", "84101000712221000000000000", "2024/April", 123M, DateTimeOffset.UtcNow,  "asdf", "asdf")
 // let transferReg = Transfers.Row("", "asdf", "91113000070080239435200002", "asdf", 1M, DateTimeOffset.UtcNow,  "asdf", "asdf")
 
-ac.Scrape(period=All, count=1)
+ac.Scrape(period=All)
