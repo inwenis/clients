@@ -100,7 +100,7 @@ module Alior =
                 sleep 2 // we need to wait otherwise we can't click 'Next'
                 click p "xpath///button/*[contains(text(),'Next')]"
                 let domesticTranFin = async {
-                    do! p.WaitForSelectorAsync("xpath///*[contains(text(),'Wait on authorization')]") |> Async.AwaitTask |> Async.Ignore
+                    do! p.WaitForSelectorAsync("xpath///*[contains(text(),'Wait on authentication')]") |> Async.AwaitTask |> Async.Ignore
                     // domestic transfers can be confirmed/discarded with phone here
                     do! p.WaitForSelectorAsync("xpath///*[contains(text(),'Domestic transfer submitted.')]") |> Async.AwaitTask |> Async.Ignore
                     return Some() }
