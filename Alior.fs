@@ -99,19 +99,14 @@ module Alior =
             if isTest |> not then
                 sleep 2 // we need to wait otherwise we can't click 'Next'
                 click p "xpath///button/*[contains(text(),'Next')]"
-                let domesticTranFin = async {
-                    do! p.WaitForSelectorAsync("xpath///*[contains(text(),'Wait on authorization')]") |> Async.AwaitTask |> Async.Ignore
-                    // domestic transfers can be confirmed/discarded with phone here
-                    do! p.WaitForSelectorAsync("xpath///*[contains(text(),'Domestic transfer submitted.')]") |> Async.AwaitTask |> Async.Ignore
-                    return Some() }
+                sleep 2 // wait for the next page to load
 
-                let internalTranFin = async {
-                    sleep 2 // we need to wait otherwise the button is not clickable
-                    // internal transfers are confirmed with a button automatically
-                    click p "xpath///*[contains(text(),'Confirm')]"
-                    do! p.WaitForSelectorAsync("xpath///*[contains(text(),'Domestic transfer submitted.')]") |> Async.AwaitTask |> Async.Ignore
-                    return Some() }
-                Async.Choice [internalTranFin; domesticTranFin] |> Async.RunSynchronously |> ignore
+                // internal transfers are confirmed with a button automatically
+                // external transfers are confirmed with a phone by the user manually
+                let confirmInternalTransferButton = p.QuerySelectorAsync "xpath///*[contains(text(),'Confirm')]" |> runSync
+                if confirmInternalTransferButton <> null then clickElement confirmInternalTransferButton
+
+                p.WaitForSelectorAsync("xpath///*[contains(text(),'Domestic transfer submitted.')]") |> runSync |> ignore
                 sleep 2
             else
                 printfn "Test mode - not sending the transfer"
