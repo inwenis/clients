@@ -18,25 +18,25 @@ type TransactionsAliorCsv = CsvProvider<
 module AliorParsing =
 
     type TransactionAlior = {
-        TransactionDate:         DateOnly
-        AccountingDate:          DateOnly
-        SenderName:              string
-        ReceiverName:            string
-        TransactionText:         string
-        Amount:                  decimal
-        TransactionCurrency:     string
+        TransactionDate        : DateOnly
+        AccountingDate         : DateOnly
+        SenderName             : string
+        ReceiverName           : string
+        TransactionText        : string
+        Amount                 : decimal
+        TransactionCurrency    : string
         AmountInAccountCurrency: decimal
-        AccountCurrency:         string
-        SenderAccountNumber:     string
-        ReceiverAccountNumber:   string
+        AccountCurrency        : string
+        SenderAccountNumber    : string
+        ReceiverAccountNumber  : string
     }
 
     type AliorTransactionWithSourceFileInfo<'T> = {
-        FullFileName: string
+        FullFileName  : string
         ScrapeDateTime: DateTimeOffset
-        Product: string
-        Transaction: 'T
-        LineNumber: int
+        Product       : string
+        Transaction   : 'T
+        LineNumber    : int
     }
 
     let private parseFile fullFileName =
