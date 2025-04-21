@@ -127,9 +127,11 @@ module Alior =
             fromAccountDropDown |> clickSelector $"xpath/(.//*[contains(text(), '{transfer.FromAccount}')])[last()]"
 
             typet p "xpath///*[@id='form-symbol']" "PPE"
+            sleep 2 // wait for the drop-down to appear, otherwise we will click it too early and it won't work
             click p "xpath///span[contains(text(),'PPE')]" // after typing the `tax form symbol` I have to select it from the drop-down
 
             typet p $"xpath///*[@id='tax-department']" $"{taxOfficeName}"
+            sleep 3 // wait for the drop-down to appear, otherwise we will click it too early and it won't work
             click p $"xpath///span[contains(text(),'{taxOfficeName}')]" // after typing the `tax department` I have to select it from the drop-down
 
             typet p "xpath///*[@id='department-account-number']" transfer.ReceiverAccount
