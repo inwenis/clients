@@ -4,6 +4,7 @@ open System
 open System.Threading
 open System.Threading.Tasks
 open PuppeteerSharp
+open PuppeteerSharp.Input
 open System.Text.RegularExpressions
 
 module Utils =
@@ -24,7 +25,7 @@ module Utils =
         p.WaitForSelectorAsync(xpath) |> runSync |> fun x -> x.TypeAsync(text) |> wait
 
     let typeSlow (p:IPage) xpath text =
-        let options = new PuppeteerSharp.Input.TypeOptions()
+        let options = new TypeOptions()
         options.Delay <- TimeSpan.FromSeconds(seconds=1).TotalMilliseconds |> int
         p.WaitForSelectorAsync(xpath) |> runSync |> fun x -> x.TypeAsync(text, options) |> wait
 
