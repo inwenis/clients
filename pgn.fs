@@ -2,7 +2,6 @@ namespace clients
 
 open PuppeteerSharp
 open Utils
-open clients.Utils
 open System.Text.RegularExpressions
 
 module PGNIG =
