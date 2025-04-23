@@ -43,7 +43,7 @@ module AliorParsing =
         let extractDateTime (fullFileName:string) =
             // sample file name - Historia_Operacji_2024-07-21_11-18-31.csv.CSV
             // somehow the extension is ".csv.CSV"
-            let dateTime = Path.GetFileName fullFileName |> fun x -> x.Replace("Historia_Operacji_", "").Replace(".csv.CSV", "")
+            let dateTime = regexExtract "\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}" fullFileName
             DateTimeOffset.ParseExact(dateTime, "yyyy-MM-dd_HH-mm-ss", null)
 
         let lines = File.ReadAllLines(fullFileName, CodePagesEncodingProvider.Instance.GetEncoding(1250)) |> List.ofArray
