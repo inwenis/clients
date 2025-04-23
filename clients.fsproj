@@ -8,7 +8,7 @@
     <Compile Include="AliorParsing.fs" />
     <Compile Include="Alior.fs" />
     <Compile Include="Energa.fs" />
-    <Compile Include="PGNIG.fs" />
+    <Compile Include="pgn.fs" />
   </ItemGroup>
   <Import Project=".paket\Paket.Restore.targets" />
 </Project>
