@@ -7,7 +7,7 @@ open PuppeteerSharp
 open System.Text.RegularExpressions
 
 module Utils =
-    let sleep x = x |> fun y -> TimeSpan.FromSeconds(seconds=y) |> Thread.Sleep
+    let sleep x = x |> int64 |> TimeSpan.FromSeconds |> Thread.Sleep
 
     let wait (t:Task) = t.Wait()
 
@@ -42,3 +42,35 @@ module Utils =
     let regexExtracts regex                      text = Regex.Matches(text, regex) |> Seq.map (fun x -> x.Value)
     let regexReplace  regex (replacement:string) text = Regex.Replace(text, regex, replacement)
     let regexRemove   regex                      text = Regex.Replace(text, regex, String.Empty)
+
+    // https://stackoverflow.com/a/61304202/2377787
+    let waitTillHTMLRendered (page:IPage) =
+        let timeout = 30000
+        let checkDurationMilliseconds = 1000
+        let maxChecks = timeout / checkDurationMilliseconds
+        let mutable lastHTMLSize = 0
+        let mutable checkCounts = 1
+        let mutable countStableSizeIterations = 0
+        let minStableSizeIterations = 3
+
+        while checkCounts <= maxChecks do
+            checkCounts <- checkCounts + 1
+            let html = page.GetContentAsync().Result
+            let currentHTMLSize = html.Length
+
+            // not sure why this is here
+            let bodyHTMLSize = page.EvaluateExpressionAsync("() => document.body.innerHTML.length").Result
+
+            printfn "last: %A <> curr: %A body html size: %A" lastHTMLSize currentHTMLSize bodyHTMLSize
+
+            if lastHTMLSize <> 0 && currentHTMLSize = lastHTMLSize then
+                countStableSizeIterations <- countStableSizeIterations + 1
+            else
+                countStableSizeIterations <- 0 //reset the counter
+
+            if countStableSizeIterations >= minStableSizeIterations then
+                printfn "Page rendered fully.."
+                checkCounts <- maxChecks+1
+
+            lastHTMLSize <- currentHTMLSize
+            sleep (checkDurationMilliseconds/1000)
