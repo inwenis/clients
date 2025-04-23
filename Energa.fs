@@ -6,7 +6,7 @@ open Utils
 
 module Energa =
 
-    type EnergaClient() =
+    type EnergaClient(username, password) =
         let mutable signedIn = false
         let mutable p : IPage = null
         do
@@ -30,8 +30,8 @@ module Energa =
                 printf "Waiting for page to load... "
                 w |> wait
                 printfn "done"
-                typet p "xpath///input[@name='username']" "REMOVED"
-                typet p "xpath///input[@name='password']" "REMOVED"
+                username() |> typet p "xpath///input[@name='username']"
+                password() |> typet p "xpath///input[@name='password']"
                 let w = p.WaitForNetworkIdleAsync()
                 click p "xpath///button[@name='login']"
                 printf "Waiting for page to load... "
