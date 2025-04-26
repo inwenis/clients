@@ -39,14 +39,15 @@ module AliorParsing =
         LineNumber    : int
     }
 
-    let private parseFile fullFileName =
+    let ALIOR_ENCODING = CodePagesEncodingProvider.Instance.GetEncoding 1250
+
+    let private parseFile fullFileName lines =
         let extractDateTime (fullFileName:string) =
             // sample file name - Historia_Operacji_2024-07-21_11-18-31.csv.CSV
             // somehow the extension is ".csv.CSV"
             let dateTime = regexExtract "\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}" fullFileName
             DateTimeOffset.ParseExact(dateTime, "yyyy-MM-dd_HH-mm-ss", null)
 
-        let lines = File.ReadAllLines(fullFileName, CodePagesEncodingProvider.Instance.GetEncoding(1250)) |> List.ofArray
         let header1 :: header2 :: rows = lines
         let product = regexExtract "\d{26}" header1 // product aka. account number
         header2 :: rows
@@ -80,6 +81,8 @@ module AliorParsing =
     let parseFiles files =
         files
         |> List.ofSeq
-        |> List.map (fun f -> parseFile f)
+        |> List.map (fun f -> f, File.ReadAllLines(f, ALIOR_ENCODING) |> List.ofArray)
+        |> List.filter (fun (_, lines) -> lines.Length > 0) // a file might be empty if the account has no transactions
+        |> List.map (fun (f, lines) -> parseFile f lines)
         |> List.collect id
         |> List.map (fun x -> parseAgain x)
