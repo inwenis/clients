@@ -21,6 +21,10 @@ module Alior =
     | All
     | OtherRange of DateOnly * DateOnly
 
+    let HOME = Environment.GetFolderPath Environment.SpecialFolder.UserProfile
+    let DOWNLOADS = Path.Combine(HOME, "Downloads") // puppeteer downloads files to this folder
+    let DEFAULT_DESTINATION = DOWNLOADS
+
     type AliorClient private (usernameFun, passwordFun, page, signedIn, isTest) =
         let mutable signedIn = signedIn
         let mutable p : IPage = page
@@ -166,7 +170,8 @@ module Alior =
 
         member this.GetP() = p
 
-        member this.Scrape(?period, ?count) =
+        member this.Scrape(?destination, ?period, ?count) =
+            let dest = destination |> Option.defaultValue DEFAULT_DESTINATION
             let period =
                 match period with
                 // we can't download transactions using the option 'All' but we can use 'Other range' with a wide range
@@ -244,10 +249,12 @@ module Alior =
                 click p product  // deselect current product
                 sleep 2
 
-            let home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)
-            Directory.EnumerateFiles(Path.Combine(home,"Downloads"), "*.csv")
+            Directory.EnumerateFiles(DOWNLOADS, "*.csv")
             |> List.ofSeq
             |> List.map              (fun x -> new FileInfo(x))
             |> List.filter           (fun x -> DateTimeOffset.UtcNow - DateTimeOffset(x.CreationTimeUtc) < TimeSpan.FromMinutes(minutes=5))
             |> List.sortByDescending (fun x -> x.CreationTimeUtc)
-            |> List.map              (fun x -> x.FullName)
+            |> List.map (fun x ->
+                let destFullName = Path.Combine(dest, x.Name)
+                File.Move(x.FullName, destFullName)
+                destFullName)
