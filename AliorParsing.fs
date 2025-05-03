@@ -39,8 +39,6 @@ module AliorParsing =
         LineNumber    : int
     }
 
-    let ALIOR_ENCODING = CodePagesEncodingProvider.Instance.GetEncoding 1250
-
     let private parseFile fullFileName lines =
         let extractDateTime (fullFileName:string) =
             // sample file name - Historia_Operacji_2024-07-21_11-18-31.csv.CSV
@@ -81,7 +79,7 @@ module AliorParsing =
     let parseFiles files =
         files
         |> List.ofSeq
-        |> List.map (fun f -> f, File.ReadAllLines(f, ALIOR_ENCODING) |> List.ofArray)
+        |> List.map (fun f -> f, File.ReadAllLines(f, Encoding.UTF8) |> List.ofArray)
         |> List.filter (fun (_, lines) -> lines.Length > 0) // a file might be empty if the account has no transactions
         |> List.map (fun (f, lines) -> parseFile f lines)
         |> List.collect id

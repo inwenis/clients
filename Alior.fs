@@ -4,6 +4,7 @@ open PuppeteerSharp
 open Utils
 open System.IO
 open System
+open System.Text
 open FSharp.Data
 
 
@@ -15,6 +16,8 @@ Billing account name is long to align with head,Receiver2,   12 1234 1234 12,Tit
 
 
 module Alior =
+
+    let ALIOR_ENCODING = CodePagesEncodingProvider.Instance.GetEncoding 1250
 
     type ScrapePeriod =
     | LastYear
@@ -258,3 +261,8 @@ module Alior =
                 let destFullName = Path.Combine(dest, x.Name)
                 File.Move(x.FullName, destFullName)
                 destFullName)
+            |> List.map (fun x ->
+                // save the files encoded as UTF-8 because I can't stand working with files encoded as Windows-1250
+                let text = File.ReadAllText(x, ALIOR_ENCODING)
+                File.WriteAllText(x, text, Encoding.UTF8)
+                x)
