@@ -29,6 +29,7 @@ module AliorParsing =
         AccountCurrency        : string
         SenderAccountNumber    : string
         ReceiverAccountNumber  : string
+        OrdinalNumber          : int
     }
 
     type AliorTransactionWithSourceFileInfo<'T> = {
@@ -55,26 +56,34 @@ module AliorParsing =
         |> List.ofSeq
         |> List.mapi (fun i t -> { FullFileName = fullFileName; ScrapeDateTime = extractDateTime fullFileName; Transaction = t; LineNumber = i + 3; Product = product }) // +3 to align with line number in file
 
-    let private parseAgain (x:AliorTransactionWithSourceFileInfo<TransactionsAliorCsv.Row>) =
-        let parsedAgain = {
-            TransactionDate =         x.Transaction.``Data transakcji`` |> fun x -> DateOnly.ParseExact(x, "dd-MM-yyyy", null)
-            AccountingDate =          x.Transaction.``Data księgowania`` |> fun x -> DateOnly.ParseExact(x, "dd-MM-yyyy", null)
-            SenderName =              x.Transaction.``Nazwa nadawcy``
-            ReceiverName =            x.Transaction.``Nazwa odbiorcy``
-            TransactionText =         x.Transaction.``Szczegóły transakcji``
-            Amount =                  x.Transaction.``Kwota operacji`` |> fun x -> decimal (x.Replace(",", "."))
-            TransactionCurrency =     x.Transaction.``Waluta operacji``
-            AmountInAccountCurrency = x.Transaction.``Kwota w walucie rachunku`` |> fun x -> decimal (x.Replace(",", "."))
-            AccountCurrency =         x.Transaction.``Waluta rachunku``
-            SenderAccountNumber =     x.Transaction.``Numer rachunku nadawcy``
-            ReceiverAccountNumber =   x.Transaction.``Numer rachunku odbiorcy`` } : TransactionAlior
-        {
-            FullFileName = x.FullFileName
-            Transaction = parsedAgain
-            LineNumber = x.LineNumber
-            Product = x.Product
-            ScrapeDateTime = x.ScrapeDateTime
-        }
+    let private parseAgain (transactions:AliorTransactionWithSourceFileInfo<TransactionsAliorCsv.Row> list) =
+        transactions
+        |> List.groupBy (fun x -> x.Transaction)
+        |> List.map snd
+        |> List.collect (fun x ->
+            x |> List.mapi (fun i x ->
+                let parsedAgain = {
+                    TransactionDate =         x.Transaction.``Data transakcji`` |> fun x -> DateOnly.ParseExact(x, "dd-MM-yyyy", null)
+                    AccountingDate =          x.Transaction.``Data księgowania`` |> fun x -> DateOnly.ParseExact(x, "dd-MM-yyyy", null)
+                    SenderName =              x.Transaction.``Nazwa nadawcy``
+                    ReceiverName =            x.Transaction.``Nazwa odbiorcy``
+                    TransactionText =         x.Transaction.``Szczegóły transakcji``
+                    Amount =                  x.Transaction.``Kwota operacji`` |> fun x -> decimal (x.Replace(",", "."))
+                    TransactionCurrency =     x.Transaction.``Waluta operacji``
+                    AmountInAccountCurrency = x.Transaction.``Kwota w walucie rachunku`` |> fun x -> decimal (x.Replace(",", "."))
+                    AccountCurrency =         x.Transaction.``Waluta rachunku``
+                    SenderAccountNumber =     x.Transaction.``Numer rachunku nadawcy``
+                    ReceiverAccountNumber =   x.Transaction.``Numer rachunku odbiorcy``
+                    OrdinalNumber =           i } : TransactionAlior
+                {
+                    FullFileName = x.FullFileName
+                    Transaction = parsedAgain
+                    LineNumber = x.LineNumber
+                    Product = x.Product
+                    ScrapeDateTime = x.ScrapeDateTime
+                }
+            )
+        )
 
     let parseFiles files =
         files
@@ -82,5 +91,5 @@ module AliorParsing =
         |> List.map (fun f -> f, File.ReadAllLines(f, Encoding.UTF8) |> List.ofArray)
         |> List.filter (fun (_, lines) -> lines.Length > 0) // a file might be empty if the account has no transactions
         |> List.map (fun (f, lines) -> parseFile f lines)
-        |> List.collect id
         |> List.map (fun x -> parseAgain x)
+        |> List.collect id
