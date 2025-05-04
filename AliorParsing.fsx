@@ -11,9 +11,8 @@ open System.IO
 
 open clients.AliorParsing
 
-let home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)
-let downloads = Path.Combine(home, "Downloads")
 
-let rows = Directory.EnumerateFiles(downloads, "Historia_Operacji_*.csv.CSV") |> parseFiles
+let rows = Directory.EnumerateFiles(@"c:\git\alior-scrape", "Historia_Operacji_*.csv.CSV") |> parseFiles
+
 rows.Head
 rows.Head.Transaction.TransactionDate
