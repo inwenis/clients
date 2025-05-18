@@ -22,8 +22,3 @@ open clients.PGNIG
 
 let c = PGNiGClient(env "PGNIG_USERNAME", env "PGNIG_PASSWORD")
 c.SingIn()
-
-let is = c.ScrapeInvoicesInternal()
-
-c.ProcessInvoices(is)
-

@@ -99,14 +99,14 @@ module PGNIG =
                 // parse only relevant stuff so changes in irrelevant fields don't cause parsing to break
 
                 // sample text - "16,33 zł0,00 zł"
-                let invoice_amount =  a.[3] |> get_text |> regexExtract "(.*?) zł.*? zł" |> regexReplace "," "." |> decimal
+                let invoice_amount =  a.[3] |> get_text |> regexExtractg "(.*?) zł.*? zł" |> regexReplace "," "." |> decimal
 
                 // sample text - "Numer faktury: 826560/118/2024/FData wystawienia: 13-03-2024"
-                let date = b.[0] |> get_text |> regexExtract "Data wystawienia: (.+)" |> fun x -> System.DateTimeOffset.ParseExact(x, "dd-MM-yyyy", null)
+                let date = b.[0] |> get_text |> regexExtractg "Data wystawienia: (.+)" |> fun x -> System.DateTimeOffset.ParseExact(x, "dd-MM-yyyy", null)
 
                 // sample text - "Umowa wygasła - brak danych"
                 // sample text - "Adres:  80-433  ***REMOVED***, ul. Ludwika Waryńskiego 46 B /6"
-                let address = b.[2] |> get_text |> regexExtract "(Umowa wygasła|Adres:\s.+)"
+                let address = b.[2] |> get_text |> regexExtractg "(Umowa wygasła|Adres:\s.+)"
 
                 address, date, invoice_amount
             )
