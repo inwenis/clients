@@ -75,3 +75,5 @@ module Utils =
 
             lastHTMLSize <- currentHTMLSize
             sleep (checkDurationMilliseconds/1000)
+
+    let env name = fun _ -> Environment.GetEnvironmentVariable(name)

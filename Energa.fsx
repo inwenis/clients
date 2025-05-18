@@ -14,8 +14,5 @@ open clients
 open clients.Utils
 open clients.Energa
 
-let username () = System.Environment.GetEnvironmentVariable("ENERGA_USERNAME")
-let password () = System.Environment.GetEnvironmentVariable("ENERGA_PASSWORD")
-
-let c = EnergaClient(username, password)
+let c = EnergaClient(env "ENERGA_USERNAME", env "ENERGA_PASSWORD")
 c.SingIn()
