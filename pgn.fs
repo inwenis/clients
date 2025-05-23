@@ -30,6 +30,7 @@ module PGNIG =
                 printf "Waiting for page to load... "
                 w |> wait
                 printfn "done"
+                click p "xpath///button[text()='Odrzuć wszystkie']"
                 typet p loginPage_userNameSelector (username())
                 typet p loginPage_passwordSelector (password())
                 let w = p.WaitForNetworkIdleAsync()
