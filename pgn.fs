@@ -8,7 +8,6 @@ module PGNIG =
 
     let loginPage_userNameSelector = """#main > div > div > div.remove-tablet.columns.large-4.medium-4.small-12.login-block > div > div.flip-container.row.login > div > form > div > div > div > label:nth-child(1) > input[type=text]"""
     let loginPage_passwordSelector = """#main > div > div > div.remove-tablet.columns.large-4.medium-4.small-12.login-block > div > div.flip-container.row.login > div > form > div > div > div > label:nth-child(2) > div.relative > input[type=password]"""
-    let loginPage_signInButton     = """#main > div > div > div.remove-tablet.columns.large-4.medium-4.small-12.login-block > div > div.flip-container.row.login > div > form > div > div > div > button"""
 
     type PGNiGClient(username, password) =
         let mutable signedIn = false
@@ -34,7 +33,7 @@ module PGNIG =
                 typet p loginPage_userNameSelector (username())
                 typet p loginPage_passwordSelector (password())
                 let w = p.WaitForNetworkIdleAsync()
-                click p loginPage_signInButton
+                click p "xpath///button[@type='submit']"
                 printf "Waiting for page to load... "
                 w |> wait
                 printfn "done"
