@@ -9,6 +9,11 @@ module PGNIG =
     let loginPage_userNameSelector = """#main > div > div > div.remove-tablet.columns.large-4.medium-4.small-12.login-block > div > div.flip-container.row.login > div > form > div > div > div > label:nth-child(1) > input[type=text]"""
     let loginPage_passwordSelector = """#main > div > div > div.remove-tablet.columns.large-4.medium-4.small-12.login-block > div > div.flip-container.row.login > div > form > div > div > div > label:nth-child(2) > div.relative > input[type=password]"""
 
+    type InvoiceData = {
+        BeforeClickingOnInvoice: string list
+        AfterClickingOnInvoice: string list
+    }
+
     type PGNiGClient(username, password) =
         let mutable signedIn = false
         let mutable p : IPage = null
@@ -94,41 +99,30 @@ module PGNIG =
 
             invoices
 
-        member this.ProcessInvoices(invoices:list<array<IElementHandle> * array<IElementHandle>>) =
-            let get_text (x:IElementHandle) = x.GetPropertyAsync("innerText").Result.JsonValueAsync().Result |> string
-
-            invoices
-            |> List.map (fun (a,b) ->
-                // parse only relevant stuff so changes in irrelevant fields don't cause parsing to break
-
-                // sample text - "16,33 zł0,00 zł"
-                let invoice_amount =  a.[3] |> get_text |> regexExtractg "(.*?) zł.*? zł" |> regexReplace "," "." |> decimal
-
-                // sample text - "Numer faktury: 826560/118/2024/FData wystawienia: 13-03-2024"
-                let date = b.[0] |> get_text |> regexExtractg "Data wystawienia: (.+)" |> fun x -> System.DateTimeOffset.ParseExact(x, "dd-MM-yyyy", null)
-
-                // sample text - "Umowa wygasła - brak danych"
-                // sample text - "Adres:  80-433  ***REMOVED***, ul. Ludwika Waryńskiego 46 B /6"
-                let address = b.[2] |> get_text |> regexExtractg "(Umowa wygasła|Adres:\s.+)"
-
-                address, date, invoice_amount
-            )
-            |> List.filter (fun (a, d, i) -> a <> "Umowa wygasła")
-            |> List.map (fun (a, d, i) ->
-                let curve =
-                    match a |> regexRemove "\s" with
-                    | _ -> failwithf "Unknown address format: %s" a
-                curve, d, i
-            )
-            |> List.groupBy (fun (curve, _, _) -> curve)
-            |> List.map (fun (c, data) -> c, data |> List.map (fun (_,x,y) -> x,y))
-
-
         member this.ScrapeInvoices() =
+            let getAllTexts (x:IElementHandle) =
+                x.QuerySelectorAllAsync("xpath/.//text()").Result
+                |> Array.map (fun x -> x.GetPropertyAsync("textContent").Result.JsonValueAsync().Result |> string)
+                |> List.ofArray
+
+            let parseInvoiceToStrings (before : IElementHandle array, after : IElementHandle array) =
+                let before = before |> List.ofArray |> List.collect getAllTexts |> List.map (fun x -> x.Trim()) |> List.filter (fun x -> x <> "")
+                let after  = after  |> List.ofArray |> List.collect getAllTexts |> List.map (fun x -> x.Trim()) |> List.filter (fun x -> x <> "")
+                {
+                    BeforeClickingOnInvoice = before
+                    AfterClickingOnInvoice = after
+                }
+
+            // await page.evaluate(() => document.body.style.zoom = 0.5  );
+
+            p.EvaluateExpressionAsync("() => document.body.style.zoom = 0.5").Wait()
+
             p.GoToAsync("https://ebok.pgnig.pl/faktury") |> Async.AwaitTask |> Async.RunSynchronously |> ignore
             sleep 2
             let invoices = this.ScrapeInvoicesInternal()
-            this.ProcessInvoices(invoices)
+
+            invoices
+            |> List.map parseInvoiceToStrings
 
         member this.ScrapeOverpayments() =
             p.GoToAsync("https://ebok.pgnig.pl/umowy") |> Async.AwaitTask |> Async.RunSynchronously |> ignore
