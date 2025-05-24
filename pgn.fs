@@ -25,7 +25,7 @@ module PGNIG =
         member this.SingIn() =
             if signedIn |> not then
                 p <-
-                    let l_options = new LaunchOptions(Headless = false, DefaultViewport = ViewPortOptions(), Args = [| "--disable-notifications" |])
+                    let l_options = new LaunchOptions(Headless = false, DefaultViewport = ViewPortOptions(), Args = [| "--disable-notifications"; "--force-device-scale-factor=0.5" |])
                     let b = Puppeteer.LaunchAsync(l_options) |> runSync
                     b.PagesAsync() |> runSync |> Array.exactlyOne
 
