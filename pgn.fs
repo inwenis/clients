@@ -33,6 +33,7 @@ module PGNIG =
                 typet p loginPage_userNameSelector (username())
                 typet p loginPage_passwordSelector (password())
                 let w = p.WaitForNetworkIdleAsync()
+                sleep 1 // I have experienced that without waiting here clicking the "submit" button has no effect
                 click p "xpath///button[@type='submit']"
                 printf "Waiting for page to load... "
                 w |> wait
