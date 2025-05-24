@@ -33,3 +33,4 @@ let b = p.QuerySelectorAsync "xpath///button[text()='Odrzuć wszystkie']" |> run
 b |> getAttributes
 
 
+c.ScrapeInvoices()
