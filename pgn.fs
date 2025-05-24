@@ -114,10 +114,7 @@ module PGNIG =
             |> List.map (fun (a, d, i) ->
                 let curve =
                     match a |> regexRemove "\s" with
-                    | "Adres:***REMOVED***"
-                    | "Adres:***REMOVED***"     -> "***REMOVED***"
-                    | "Adres:***REMOVED***"
-                    | "Adres:***REMOVED***" -> "***REMOVED***"
+                    | _ -> failwithf "Unknown address format: %s" a
                 curve, d, i
             )
             |> List.groupBy (fun (curve, _, _) -> curve)
@@ -149,8 +146,7 @@ module PGNIG =
 
             let nameToCurveMap x =
                 match x with
-                | "***REMOVED***"          -> "***REMOVED***"
-                | "***REMOVED***" -> "***REMOVED***"
+                | _ -> failwithf "not yet supported"
 
             let parseAmount x =
                 match x with
