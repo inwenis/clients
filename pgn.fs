@@ -78,10 +78,12 @@ module PGNIG =
                     // some invoices take long to load
                     let mutable details_loaded = false
                     while details_loaded |> not do
+                        // wait to avoid busy waiting
+                        // wait before the first check as querying for the modal immediately after clicking the magnifier will return null
+                        sleep 1
                         let details_text = p.QuerySelectorAsync("xpath///div[@class='ModalContent']").Result.GetPropertyAsync("textContent").Result |> string // get all the text of the modal that displays the invoice's details
                         if details_text.Contains("Numer faktury") then details_loaded <- true
                         if details_text.Contains("Numer noty") then details_loaded <- true
-                        sleep 1
 
                     let modal = p.QuerySelectorAsync("xpath///div[@class='ModalContent']").Result
                     let modal_rows = modal.QuerySelectorAllAsync("xpath/./div[@class='agreementModal']/div").Result
