@@ -25,12 +25,7 @@ open clients.PGNIG
 
 let c = PGNiGClient(env "PGNIG_USERNAME", env "PGNIG_PASSWORD")
 c.SingIn()
-c.ScrapeInvoicesInternal()
-let p = c.GetP()
-
-
-let b = p.QuerySelectorAsync "xpath///button[text()='Odrzuć wszystkie']" |> runSync
-b |> getAttributes
-
 
 c.ScrapeInvoices()
+
+let p = c.GetP()
