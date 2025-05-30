@@ -130,33 +130,13 @@ module PGNIG =
 
             let rows = p.QuerySelectorAllAsync("xpath///div[contains(@class,'table-row')]").Result
 
-            // JSHandle:010/2021/157244/UI54563288018590365500027859174 010/2021/157244/UI***REMOVED*** ***REMOVED*** ***REMOVED***19,65 zł
-            // JSHandle:010/2019/5010/UI8265608018590365500021566160 010/2019/5010/UI***REMOVED*** ***REMOVED*** ***REMOVED***
-
-            let parseRow text =
-                let dic = new System.Collections.Generic.Dictionary<string,string>()
-                // JSHandle:P/5456328/0005/23Faktura sprzedaż19-05-202337,63 zł0,00 zł80 kWhOpłacona
-                let m = Regex.Match(text, "JSHandle:.*(?:***REMOVED***|***REMOVED***)(.*?)***REMOVED***(.*)")
-                m.Groups.[1].Value |> fun x -> x.Trim() |> fun x -> dic.Add("adres", x)
-                m.Groups.[2].Value |> fun x -> x.Trim() |> fun x -> dic.Add("amount", x)
-                dic
-
-            let nameToCurveMap x =
-                match x with
-                | _ -> failwithf "not yet supported"
-
-            let parseAmount x =
-                match x with
-                | "" -> 0M
-                | _  -> x |> regexRemove " zł" |> regexReplace "," "." |> regexRemove "[a-z!]" |> decimal
-
-            let data =
-                rows
+            rows
+            |> List.ofArray
+            |> List.map (fun row ->
+                row.QuerySelectorAllAsync("xpath/.//div[contains(@class,'columns')]").Result
                 |> List.ofArray
-                |> List.map (fun x -> x.GetPropertyAsync("textContent").Result |> string)
-                |> List.map parseRow
-                |> List.map (fun x -> x.["adres"] |> nameToCurveMap, x.["amount"] |> parseAmount)
-
-            data
+                |> List.map (fun cell -> cell.EvaluateFunctionAsync<string>("el => el.textContent").Result)
+                |> List.map (fun x -> x.Trim())
+                |> List.filter (fun x -> x <> "") )
 
         member this.GetP() = p
