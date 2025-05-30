@@ -51,7 +51,10 @@ module AliorParsing =
             let dateTime = regexExtract "\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}" fullFileName
             DateTimeOffset.ParseExact(dateTime, "yyyy-MM-dd_HH-mm-ss", null)
 
-        let header1 :: header2 :: rows = lines
+        let header1, header2, rows =
+            match lines with
+            | header1 :: header2 :: rows -> header1, header2, rows
+            | _ -> failwithf "invalid file %s" fullFileName
         let product = regexExtract "\d{26}" header1 // product aka. account number
         header2 :: rows
         |> String.concat "\n"
