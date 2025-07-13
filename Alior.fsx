@@ -13,9 +13,9 @@ open clients.Utils
 open clients.Alior
 
 let ac = AliorClient(env "ALIOR_USERNAME", env "ALIOR_PASSWORD", isTest=true)
-// #load "Alior.fs"
+//#load "Alior.fs"
 //open clients.Alior
-//let ac = AliorClient(username, password, ac.GetP(), true)
+//let ac = AliorClient(env "ALIOR_USERNAME", env "ALIOR_PASSWORD", ac.GetP(), isTest=true)
 //ac.SignIn()
 
 // let taxOfficeName = "Drugi Mazowiecki Urząd Skarbowy Warszawa"
