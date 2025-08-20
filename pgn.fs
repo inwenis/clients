@@ -24,9 +24,10 @@ module PGNIG =
         member this.SingIn() =
             if signedIn |> not then
                 p <-
-                    let l_options = new LaunchOptions(Headless = false, DefaultViewport = ViewPortOptions(), Args = [| "--disable-notifications"; "--force-device-scale-factor=0.5" |])
-                    let b = Puppeteer.LaunchAsync(l_options) |> runSync
-                    b.PagesAsync() |> runSync |> Array.exactlyOne
+                    let arg = [| "--disable-notifications"; "--force-device-scale-factor=0.5" |]
+                    let opt = new LaunchOptions(Headless = false, DefaultViewport = ViewPortOptions(), Args = arg)
+                    let brw = Puppeteer.LaunchAsync(opt) |> runSync
+                    brw.PagesAsync() |> runSync |> Array.exactlyOne
 
                 let w = p.WaitForNetworkIdleAsync()
                 p.GoToAsync("https://ebok.pgnig.pl/") |> wait
