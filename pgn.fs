@@ -35,6 +35,9 @@ module PGNIG =
                 w |> wait
                 printfn "done"
                 click p "xpath///button[text()='Odrzuć wszystkie']"
+                sleep 1
+                click p "xpath///i[contains(@class,'icon-close')]"
+                sleep 1
                 typet p loginPage_userNameSelector (username())
                 typet p loginPage_passwordSelector (password())
                 let w = p.WaitForNetworkIdleAsync()
