@@ -55,6 +55,9 @@ module PGNIG =
             waitTillHTMLRendered p
             printfn "done"
 
+            click p "xpath///i[contains(@class,'icon-close')]"
+            sleep 1
+
             p.TypeAsync("xpath///input[@id='reading-0']", indication |> string) |> wait
 
             click p "xpath///button[contains(text(), 'Zapisz odczyt')]"
