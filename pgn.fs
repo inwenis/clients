@@ -25,7 +25,10 @@ module PGNIG =
             if signedIn |> not then
                 p <-
                     let arg = [| "--disable-notifications"; "--force-device-scale-factor=0.5" |]
-                    let opt = new LaunchOptions(Headless = false, DefaultViewport = ViewPortOptions(), Args = arg)
+
+                    let opt =
+                        new LaunchOptions(Headless = false, DefaultViewport = ViewPortOptions(), Args = arg)
+
                     let brw = Puppeteer.LaunchAsync opt |> runSync
                     brw.PagesAsync() |> runSync |> Array.exactlyOne
 
@@ -38,8 +41,8 @@ module PGNIG =
                 sleep 1
                 click p "xpath///i[contains(@class,'icon-close')]"
                 sleep 1
-                typet p loginPage_userNameSelector (username())
-                typet p loginPage_passwordSelector (password())
+                typet p loginPage_userNameSelector (username ())
+                typet p loginPage_passwordSelector (password ())
                 let w = p.WaitForNetworkIdleAsync()
                 sleep 1 // I have experienced that without waiting here clicking the "submit" button has no effect
                 click p "xpath///button[@type='submit']"
