@@ -26,11 +26,11 @@ module PGNIG =
                 p <-
                     let arg = [| "--disable-notifications"; "--force-device-scale-factor=0.5" |]
                     let opt = new LaunchOptions(Headless = false, DefaultViewport = ViewPortOptions(), Args = arg)
-                    let brw = Puppeteer.LaunchAsync(opt) |> runSync
+                    let brw = Puppeteer.LaunchAsync opt |> runSync
                     brw.PagesAsync() |> runSync |> Array.exactlyOne
 
                 let w = p.WaitForNetworkIdleAsync()
-                p.GoToAsync("https://ebok.pgnig.pl/") |> wait
+                p.GoToAsync "https://ebok.pgnig.pl/" |> wait
                 printf "Waiting for page to load... "
                 w |> wait
                 printfn "done"
@@ -123,7 +123,7 @@ module PGNIG =
 
             p.EvaluateExpressionAsync("() => document.body.style.zoom = 0.5").Wait()
 
-            p.GoToAsync("https://ebok.pgnig.pl/faktury") |> Async.AwaitTask |> Async.RunSynchronously |> ignore
+            p.GoToAsync "https://ebok.pgnig.pl/faktury" |> Async.AwaitTask |> Async.RunSynchronously |> ignore
             sleep 2
             let invoices = this.ScrapeInvoicesInternal()
 
@@ -131,7 +131,7 @@ module PGNIG =
             |> List.map parseInvoiceToStrings
 
         member this.ScrapeOverpayments() =
-            p.GoToAsync("https://ebok.pgnig.pl/umowy") |> Async.AwaitTask |> Async.RunSynchronously |> ignore
+            p.GoToAsync "https://ebok.pgnig.pl/umowy" |> Async.AwaitTask |> Async.RunSynchronously |> ignore
             sleep 2
 
             let rows = p.QuerySelectorAllAsync("xpath///div[contains(@class,'table-row')]").Result
