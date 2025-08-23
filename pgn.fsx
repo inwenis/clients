@@ -1,4 +1,5 @@
 #load "c:/git/prelude/prelude.fsx"
+#load "local_prelude.fsx"
 
 Prelude.WorkingDirectorySetter.SetToMe()
 
