@@ -11,6 +11,9 @@
     <Compile Include="Energa.fs" />
     <Compile Include="pgn.fs" />
     <Compile Include="Program.fs" />
+    <None Include="appsettings.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>
