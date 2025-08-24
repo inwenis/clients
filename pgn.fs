@@ -5,9 +5,6 @@ open Utils
 
 module PGNIG =
 
-    let loginPage_userNameSelector = """#main > div > div > div.remove-tablet.columns.large-4.medium-4.small-12.login-block > div > div.flip-container.row.login > div > form > div > div > div > label:nth-child(1) > input[type=text]"""
-    let loginPage_passwordSelector = """#main > div > div > div.remove-tablet.columns.large-4.medium-4.small-12.login-block > div > div.flip-container.row.login > div > form > div > div > div > label:nth-child(2) > div.relative > input[type=password]"""
-
     type InvoiceData = {
         BeforeClickingOnInvoice: string list
         AfterClickingOnInvoice: string list
@@ -25,12 +22,15 @@ module PGNIG =
             if signedIn |> not then
                 p <-
                     let arg = [| "--disable-notifications"; "--force-device-scale-factor=0.5" |]
-                    let opt = new LaunchOptions(Headless = false, DefaultViewport = ViewPortOptions(), Args = arg)
-                    let brw = Puppeteer.LaunchAsync(opt) |> runSync
+
+                    let opt =
+                        new LaunchOptions(Headless = false, DefaultViewport = ViewPortOptions(), Args = arg)
+
+                    let brw = Puppeteer.LaunchAsync opt |> runSync
                     brw.PagesAsync() |> runSync |> Array.exactlyOne
 
                 let w = p.WaitForNetworkIdleAsync()
-                p.GoToAsync("https://ebok.pgnig.pl/") |> wait
+                p.GoToAsync "https://ebok.pgnig.pl/" |> wait
                 printf "Waiting for page to load... "
                 w |> wait
                 printfn "done"
@@ -38,8 +38,8 @@ module PGNIG =
                 sleep 1
                 click p "xpath///i[contains(@class,'icon-close')]"
                 sleep 1
-                typet p loginPage_userNameSelector (username())
-                typet p loginPage_passwordSelector (password())
+                typet p "xpath///input[@name='identificator']" (username ())
+                typet p "xpath///input[@name='accessPin']" (password ())
                 let w = p.WaitForNetworkIdleAsync()
                 sleep 1 // I have experienced that without waiting here clicking the "submit" button has no effect
                 click p "xpath///button[@type='submit']"
@@ -123,7 +123,7 @@ module PGNIG =
 
             p.EvaluateExpressionAsync("() => document.body.style.zoom = 0.5").Wait()
 
-            p.GoToAsync("https://ebok.pgnig.pl/faktury") |> Async.AwaitTask |> Async.RunSynchronously |> ignore
+            p.GoToAsync "https://ebok.pgnig.pl/faktury" |> Async.AwaitTask |> Async.RunSynchronously |> ignore
             sleep 2
             let invoices = this.ScrapeInvoicesInternal()
 
@@ -131,7 +131,7 @@ module PGNIG =
             |> List.map parseInvoiceToStrings
 
         member this.ScrapeOverpayments() =
-            p.GoToAsync("https://ebok.pgnig.pl/umowy") |> Async.AwaitTask |> Async.RunSynchronously |> ignore
+            p.GoToAsync "https://ebok.pgnig.pl/umowy" |> Async.AwaitTask |> Async.RunSynchronously |> ignore
             sleep 2
 
             let rows = p.QuerySelectorAllAsync("xpath///div[contains(@class,'table-row')]").Result

@@ -27,4 +27,7 @@ open clients.PGNIG
 let c = PGNiGClient(env "PGNIG_USERNAME", env "PGNIG_PASSWORD")
 
 c.SingIn()
-let p = c.GetP()
+let mutable p = c.GetP()
+
+
+p.QuerySelectorAsync("xpath///div").Result
