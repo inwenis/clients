@@ -1,2 +1,4 @@
 PuppeteerSharp
 FSharp.Data
+Microsoft.Extensions.Configuration
+Microsoft.Extensions.Configuration.Json

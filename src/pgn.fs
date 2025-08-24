@@ -10,7 +10,7 @@ module PGNIG =
         AfterClickingOnInvoice: string list
     }
 
-    type PGNiGClient(username, password) =
+    type PGNiGClient(username, password, args) =
         let mutable signedIn = false
         let mutable p : IPage = null
         do
@@ -21,10 +21,8 @@ module PGNIG =
         member this.SingIn() =
             if signedIn |> not then
                 p <-
-                    let arg = [| "--disable-notifications"; "--force-device-scale-factor=0.5" |]
-
                     let opt =
-                        new LaunchOptions(Headless = false, DefaultViewport = ViewPortOptions(), Args = arg)
+                        new LaunchOptions(Headless = false, DefaultViewport = ViewPortOptions(), Args = args)
 
                     let brw = Puppeteer.LaunchAsync opt |> runSync
                     brw.PagesAsync() |> runSync |> Array.exactlyOne
