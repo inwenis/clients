@@ -26,7 +26,7 @@ let args = [| "--disable-notifications"; "--force-device-scale-factor=0.5" |]
 
 let c = PGNiGClient(env "PGNIG_USERNAME", env "PGNIG_PASSWORD", args)
 
-c.SingIn()
+c.SignIn()
 let mutable p = c.GetP()
 
 p.QuerySelectorAsync("xpath///div").Result

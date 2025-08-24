@@ -18,7 +18,7 @@ module PGNIG =
             let bf = new BrowserFetcher()
             bf.DownloadAsync() |> wait
 
-        member this.SingIn() =
+        member this.SignIn() =
             if signedIn |> not then
                 p <-
                     let opt =

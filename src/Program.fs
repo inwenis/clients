@@ -21,7 +21,7 @@ let main argv =
 
     let client = PGNiGClient(env "PGNIG_USERNAME", env "PGNIG_PASSWORD", args)
 
-    client.SingIn()
+    client.SignIn()
 
     let p = client.GetP()
 
