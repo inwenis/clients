@@ -6,5 +6,6 @@
         "Xpaths"
     ],
     "FSharp.inlayHints.parameterNames": false,
-    "FSharp.inlayHints.typeAnnotations": false
+    "FSharp.inlayHints.typeAnnotations": false,
+    "cSpell.enabled": true
 }
