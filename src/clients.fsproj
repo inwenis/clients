@@ -2,6 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
+    <OutputType>Exe</OutputType>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Utils.fs" />
@@ -9,6 +10,7 @@
     <Compile Include="Alior.fs" />
     <Compile Include="Energa.fs" />
     <Compile Include="pgn.fs" />
+    <Compile Include="Program.fs" />
   </ItemGroup>
-  <Import Project=".paket\Paket.Restore.targets" />
+  <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>
