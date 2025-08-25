@@ -25,9 +25,14 @@ open clients.PGNIG
 
 let args = [| "--disable-notifications"; "--force-device-scale-factor=0.9" |]
 
+#load "../src/pgn.fs"
+open clients.PGNIG
+
 let c = PGNiGClient(env "PGNIG_USERNAME", env "PGNIG_PASSWORD", args)
 
 c.SignIn()
 let mutable p = c.GetP()
 
 let x = p.QuerySelectorAsync("xpath///div").Result
+
+c.SubmitIndication(123)
