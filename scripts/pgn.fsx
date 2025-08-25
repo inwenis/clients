@@ -25,6 +25,7 @@ open clients.PGNIG
 
 let args = [| "--disable-notifications"; "--force-device-scale-factor=0.9" |]
 
+#load "../src/Utils.fs"
 #load "../src/pgn.fs"
 open clients.PGNIG
 

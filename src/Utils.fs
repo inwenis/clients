@@ -19,7 +19,9 @@ module Utils =
     let clickSelector xpath (e:IElementHandle) =
         e.WaitForSelectorAsync(xpath) |> runSync |> clickElement
 
-    let click (p:IPage) xpath = p.WaitForSelectorAsync(xpath) |> runSync |> clickElement
+    let click (p:IPage) xpath =
+        printfn "click %s" xpath
+        p.WaitForSelectorAsync(xpath) |> runSync |> clickElement
 
     let typet (p:IPage) xpath text =
         p.WaitForSelectorAsync(xpath) |> runSync |> fun x -> x.TypeAsync(text) |> wait
