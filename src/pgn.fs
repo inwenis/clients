@@ -4,78 +4,72 @@ open PuppeteerSharp
 open Utils
 
 module PGNIG =
+    open BaseClient
 
     type InvoiceData = {
         BeforeClickingOnInvoice: string list
         AfterClickingOnInvoice: string list
     }
 
-    type PGNiGClient(username, password, args) =
+    type PGNiGClient(username, password, args, page, isSignedIn, isTest) =
+        inherit BaseClient(username, password, args, page, isSignedIn, isTest)
+
         let mutable signedIn = false
-        let mutable p : IPage = null
-        do
-            printfn "downloading chromium"
-            let bf = new BrowserFetcher()
-            bf.DownloadAsync() |> wait
+
+        new(usr, pwd, args) = PGNiGClient(usr, pwd, args, null, false, false)
 
         member this.SignIn() =
+            this.InitializePage()
             if signedIn |> not then
-                p <-
-                    let opt =
-                        new LaunchOptions(Headless = false, DefaultViewport = ViewPortOptions(), Args = args)
-
-                    let brw = Puppeteer.LaunchAsync opt |> runSync
-                    brw.PagesAsync() |> runSync |> Array.exactlyOne
-
-                let w = p.WaitForNetworkIdleAsync()
-                p.GoToAsync "https://ebok.pgnig.pl/" |> wait
+                let w = this.Page.WaitForNetworkIdleAsync()
+                this.Page.GoToAsync "https://ebok.pgnig.pl/" |> wait
                 printf "Waiting for page to load... "
                 w |> wait
                 printfn "done"
-                click p "xpath///button[text()='Odrzuć wszystkie']"
+                click this.Page "xpath///button[text()='Odrzuć wszystkie']"
                 sleep 1
-                click p "xpath///i[contains(@class,'icon-close')]"
+                click this.Page "xpath///i[contains(@class,'icon-close')]"
                 sleep 1
-                typet p "xpath///input[@name='identificator']" (username ())
-                typet p "xpath///input[@name='accessPin']" (password ())
-                let w = p.WaitForNetworkIdleAsync()
+                typet this.Page "xpath///input[@name='identificator']" (username ())
+                typet this.Page "xpath///input[@name='accessPin']" (password ())
+                let w = this.Page.WaitForNetworkIdleAsync()
                 sleep 1 // I have experienced that without waiting here clicking the "submit" button has no effect
-                click p "xpath///button[@type='submit']"
+                click this.Page "xpath///button[@type='submit']"
                 printf "Waiting for page to load... "
                 w |> wait
                 printfn "done"
                 signedIn <- true
 
         member this.SubmitIndication(indication) =
-            p.GoToAsync "https://ebok.pgnig.pl/odczyt" |> wait
+            this.Page.GoToAsync "https://ebok.pgnig.pl/odczyt" |> wait
 
             printfn "Waiting for page to load... "
-            waitTillHTMLRendered p
+            waitTillHTMLRendered this.Page
             printfn "done"
 
-            click p "xpath///i[contains(@class,'icon-close')]"
+            click this.Page "xpath///i[contains(@class,'icon-close')]"
             sleep 1
 
-            p.TypeAsync("xpath///input[@id='reading-0']", indication |> string) |> wait
+            this.Page.TypeAsync("xpath///input[@id='reading-0']", indication |> string) |> wait
 
-            click p "xpath///button[contains(text(), 'Zapisz odczyt')]"
+            click this.Page "xpath///button[contains(text(), 'Zapisz odczyt')]"
 
-            click p "xpath///button[contains(text(), 'Tak')]"
+            click this.Page "xpath///button[contains(text(), 'Tak')]"
             // make sure the input was accepted
             printfn "Waiting for page to load... "
-            waitTillHTMLRendered p
+            waitTillHTMLRendered this.Page
             printfn "done"
 
         member this.ScrapeInvoicesInternal() =
             // we rely on the index here because the list is rebuild and DOM nodes are detached
             let invoice_indexes =
-                p.QuerySelectorAllAsync("xpath///div[contains(@class,'table-row')]").Result
+                this.Page.QuerySelectorAllAsync("xpath///div[contains(@class,'table-row')]").Result
                 |> Array.mapi (fun i _ -> i)
 
             let invoices = [
                 for index in invoice_indexes do
                     let invoice_row =
-                        p.QuerySelectorAllAsync("xpath///div[contains(@class,'table-row')]").Result
+                        this.Page.QuerySelectorAllAsync("xpath///div[contains(@class,'table-row')]").Result
                         |> Array.mapi (fun i x -> i, x)
                         |> Array.find (fun (i,_) -> i = index)
                         |> snd
@@ -90,14 +84,14 @@ module PGNIG =
                         // wait to avoid busy waiting
                         // wait before the first check as querying for the modal immediately after clicking the magnifier will return null
                         sleep 1
-                        let details_text = p.QuerySelectorAsync("xpath///div[@class='ModalContent']").Result.GetPropertyAsync("textContent").Result |> string // get all the text of the modal that displays the invoice's details
+                        let details_text = this.Page.QuerySelectorAsync("xpath///div[@class='ModalContent']").Result.GetPropertyAsync("textContent").Result |> string // get all the text of the modal that displays the invoice's details
                         if details_text.Contains("Numer faktury") then details_loaded <- true
                         if details_text.Contains("Numer noty") then details_loaded <- true
 
-                    let modal = p.QuerySelectorAsync("xpath///div[@class='ModalContent']").Result
+                    let modal = this.Page.QuerySelectorAsync("xpath///div[@class='ModalContent']").Result
                     let modal_rows = modal.QuerySelectorAllAsync("xpath/./div[@class='agreementModal']/div").Result
 
-                    p.Keyboard.PressAsync("Escape").Wait() // press Escape so we can get details for next invoice
+                    this.Page.Keyboard.PressAsync("Escape").Wait() // press Escape so we can get details for next invoice
                     sleep 2
                     yield invoice_row_cells, modal_rows ]
 
@@ -119,9 +113,9 @@ module PGNIG =
 
             // await page.evaluate(() => document.body.style.zoom = 0.5  );
 
-            p.EvaluateExpressionAsync("() => document.body.style.zoom = 0.5").Wait()
+            this.Page.EvaluateExpressionAsync("() => document.body.style.zoom = 0.5").Wait()
 
-            p.GoToAsync "https://ebok.pgnig.pl/faktury" |> Async.AwaitTask |> Async.RunSynchronously |> ignore
+            this.Page.GoToAsync "https://ebok.pgnig.pl/faktury" |> Async.AwaitTask |> Async.RunSynchronously |> ignore
             sleep 2
             let invoices = this.ScrapeInvoicesInternal()
 
@@ -129,10 +123,10 @@ module PGNIG =
             |> List.map parseInvoiceToStrings
 
         member this.ScrapeOverpayments() =
-            p.GoToAsync "https://ebok.pgnig.pl/umowy" |> Async.AwaitTask |> Async.RunSynchronously |> ignore
+            this.Page.GoToAsync "https://ebok.pgnig.pl/umowy" |> Async.AwaitTask |> Async.RunSynchronously |> ignore
             sleep 2
 
-            let rows = p.QuerySelectorAllAsync("xpath///div[contains(@class,'table-row')]").Result
+            let rows = this.Page.QuerySelectorAllAsync("xpath///div[contains(@class,'table-row')]").Result
 
             rows
             |> List.ofArray
@@ -142,5 +136,3 @@ module PGNIG =
                 |> List.map (fun cell -> cell.EvaluateFunctionAsync<string>("el => el.textContent").Result)
                 |> List.map (fun x -> x.Trim())
                 |> List.filter (fun x -> x <> "") )
-
-        member this.GetP() = p

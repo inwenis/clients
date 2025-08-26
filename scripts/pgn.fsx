@@ -13,6 +13,7 @@ open System
 #r "nuget: PuppeteerSharp, 18.0.3"
 
 #load "../src/Utils.fs"
+#load "../src/BaseClient.fs"
 #load "../src/pgn.fs"
 
 open System.IO
@@ -32,6 +33,9 @@ open clients.PGNIG
 let c = PGNiGClient(env "PGNIG_USERNAME", env "PGNIG_PASSWORD", args)
 
 c.SignIn()
+
+
+
 let mutable p = c.GetP()
 
 let x = p.QuerySelectorAsync("xpath///div").Result
