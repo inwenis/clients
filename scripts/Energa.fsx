@@ -14,5 +14,5 @@ open clients
 open clients.Utils
 open clients.Energa
 
-let c = EnergaClient(env "ENERGA_USERNAME", env "ENERGA_PASSWORD")
-c.SingIn()
+let c = EnergaClient(env "ENERGA_USERNAME", env "ENERGA_PASSWORD", [||], null, false, true)
+c.SignIn()

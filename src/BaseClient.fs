@@ -21,9 +21,10 @@ module BaseClient =
             and set(value) = p <- value
 
         member this.InitializePage() =
-            printfn "downloading chromium"
-            let bf = new BrowserFetcher()
-            bf.DownloadAsync() |> wait
-            let l_options = new LaunchOptions(Headless = false, DefaultViewport = ViewPortOptions(), Args = args)
-            let b = Puppeteer.LaunchAsync(l_options).Result
-            p <- b.PagesAsync() |> fun x -> x.Result |> Array.exactlyOne
+            if p = null then
+                printfn "downloading chromium"
+                let bf = new BrowserFetcher()
+                bf.DownloadAsync() |> wait
+                let l_options = new LaunchOptions(Headless = false, DefaultViewport = ViewPortOptions(), Args = args)
+                let b = Puppeteer.LaunchAsync(l_options).Result
+                p <- b.PagesAsync() |> fun x -> x.Result |> Array.exactlyOne
