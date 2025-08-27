@@ -1,7 +1,7 @@
 open System
 open Microsoft.Extensions.Configuration
-open clients.PGNIG
-open clients.Utils
+open PGNIG
+open Utils
 
 [<EntryPoint>]
 let main argv =

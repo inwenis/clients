@@ -1,4 +1,4 @@
-namespace clients
+module Utils
 
 open System
 open System.Threading
@@ -7,73 +7,73 @@ open PuppeteerSharp
 open PuppeteerSharp.Input
 open System.Text.RegularExpressions
 
-module Utils =
-    let sleep x = x |> int64 |> TimeSpan.FromSeconds |> Thread.Sleep
 
-    let wait (t:Task) = t.Wait()
+let sleep x = x |> int64 |> TimeSpan.FromSeconds |> Thread.Sleep
 
-    let runSync (t:Task<'a>) = t.Result
+let wait (t:Task) = t.Wait()
 
-    let clickElement (e:IElementHandle) = e.ClickAsync() |> wait
+let runSync (t:Task<'a>) = t.Result
 
-    let clickSelector xpath (e:IElementHandle) =
-        e.WaitForSelectorAsync(xpath) |> runSync |> clickElement
+let clickElement (e:IElementHandle) = e.ClickAsync() |> wait
 
-    let click (p:IPage) xpath = p.WaitForSelectorAsync(xpath) |> runSync |> clickElement
+let clickSelector xpath (e:IElementHandle) =
+    e.WaitForSelectorAsync(xpath) |> runSync |> clickElement
 
-    let typet (p:IPage) xpath text =
-        p.WaitForSelectorAsync(xpath) |> runSync |> fun x -> x.TypeAsync(text) |> wait
+let click (p:IPage) xpath = p.WaitForSelectorAsync(xpath) |> runSync |> clickElement
 
-    let typeSlow (p:IPage) xpath text =
-        let options = new TypeOptions()
-        options.Delay <- TimeSpan.FromSeconds(seconds=1).TotalMilliseconds |> int
-        p.WaitForSelectorAsync(xpath) |> runSync |> fun x -> x.TypeAsync(text, options) |> wait
+let typet (p:IPage) xpath text =
+    p.WaitForSelectorAsync(xpath) |> runSync |> fun x -> x.TypeAsync(text) |> wait
 
-    let getAttributeNames = fun (d:IElementHandle) -> d.EvaluateFunctionAsync<string[]>("node => Array.from(node.attributes).map(x => x.name)") |> runSync
-    let getAttributeValue = fun name (d:IElementHandle) -> d.EvaluateFunctionAsync<string>($"node => node.getAttribute('{name}')") |> runSync
-    let getAttributes = fun (d:IElementHandle) ->
-        let attributeNames = getAttributeNames d
-        attributeNames
-        |> List.ofArray
-        |> List.map (fun x -> x, getAttributeValue x d)
-        |> Map.ofList
+let typeSlow (p:IPage) xpath text =
+    let options = new TypeOptions()
+    options.Delay <- TimeSpan.FromSeconds(seconds=1).TotalMilliseconds |> int
+    p.WaitForSelectorAsync(xpath) |> runSync |> fun x -> x.TypeAsync(text, options) |> wait
 
-    let regexExtract  regex                      text = Regex.Match(text, regex).Value
-    let regexExtractg regex                      text = Regex.Match(text, regex).Groups.[1].Value
-    let regexExtracts regex                      text = Regex.Matches(text, regex) |> Seq.map (fun x -> x.Value)
-    let regexReplace  regex (replacement:string) text = Regex.Replace(text, regex, replacement)
-    let regexRemove   regex                      text = Regex.Replace(text, regex, String.Empty)
+let getAttributeNames = fun (d:IElementHandle) -> d.EvaluateFunctionAsync<string[]>("node => Array.from(node.attributes).map(x => x.name)") |> runSync
+let getAttributeValue = fun name (d:IElementHandle) -> d.EvaluateFunctionAsync<string>($"node => node.getAttribute('{name}')") |> runSync
+let getAttributes = fun (d:IElementHandle) ->
+    let attributeNames = getAttributeNames d
+    attributeNames
+    |> List.ofArray
+    |> List.map (fun x -> x, getAttributeValue x d)
+    |> Map.ofList
 
-    // https://stackoverflow.com/a/61304202/2377787
-    let waitTillHTMLRendered (page:IPage) =
-        let timeout = 30000
-        let checkDurationMilliseconds = 1000
-        let maxChecks = timeout / checkDurationMilliseconds
-        let mutable lastHTMLSize = 0
-        let mutable checkCounts = 1
-        let mutable countStableSizeIterations = 0
-        let minStableSizeIterations = 3
+let regexExtract  regex                      text = Regex.Match(text, regex).Value
+let regexExtractg regex                      text = Regex.Match(text, regex).Groups.[1].Value
+let regexExtracts regex                      text = Regex.Matches(text, regex) |> Seq.map (fun x -> x.Value)
+let regexReplace  regex (replacement:string) text = Regex.Replace(text, regex, replacement)
+let regexRemove   regex                      text = Regex.Replace(text, regex, String.Empty)
 
-        while checkCounts <= maxChecks do
-            checkCounts <- checkCounts + 1
-            let html = page.GetContentAsync().Result
-            let currentHTMLSize = html.Length
+// https://stackoverflow.com/a/61304202/2377787
+let waitTillHTMLRendered (page:IPage) =
+    let timeout = 30000
+    let checkDurationMilliseconds = 1000
+    let maxChecks = timeout / checkDurationMilliseconds
+    let mutable lastHTMLSize = 0
+    let mutable checkCounts = 1
+    let mutable countStableSizeIterations = 0
+    let minStableSizeIterations = 3
 
-            // not sure why this is here
-            let bodyHTMLSize = page.EvaluateExpressionAsync("() => document.body.innerHTML.length").Result
+    while checkCounts <= maxChecks do
+        checkCounts <- checkCounts + 1
+        let html = page.GetContentAsync().Result
+        let currentHTMLSize = html.Length
 
-            printfn "last: %A <> curr: %A body html size: %A" lastHTMLSize currentHTMLSize bodyHTMLSize
+        // not sure why this is here
+        let bodyHTMLSize = page.EvaluateExpressionAsync("() => document.body.innerHTML.length").Result
 
-            if lastHTMLSize <> 0 && currentHTMLSize = lastHTMLSize then
-                countStableSizeIterations <- countStableSizeIterations + 1
-            else
-                countStableSizeIterations <- 0 //reset the counter
+        printfn "last: %A <> curr: %A body html size: %A" lastHTMLSize currentHTMLSize bodyHTMLSize
 
-            if countStableSizeIterations >= minStableSizeIterations then
-                printfn "Page rendered fully.."
-                checkCounts <- maxChecks+1
+        if lastHTMLSize <> 0 && currentHTMLSize = lastHTMLSize then
+            countStableSizeIterations <- countStableSizeIterations + 1
+        else
+            countStableSizeIterations <- 0 //reset the counter
 
-            lastHTMLSize <- currentHTMLSize
-            sleep (checkDurationMilliseconds/1000)
+        if countStableSizeIterations >= minStableSizeIterations then
+            printfn "Page rendered fully.."
+            checkCounts <- maxChecks+1
 
-    let env name = fun _ -> Environment.GetEnvironmentVariable(name)
+        lastHTMLSize <- currentHTMLSize
+        sleep (checkDurationMilliseconds/1000)
+
+let env name = fun _ -> Environment.GetEnvironmentVariable(name)
