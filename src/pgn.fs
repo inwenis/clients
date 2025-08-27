@@ -9,17 +9,27 @@ type InvoiceData = {
     AfterClickingOnInvoice: string list
 }
 
-type PGNiGClient(username, password, args) =
-    let mutable signedIn = false
-    let mutable p : IPage = null
-    do
-        printfn "downloading chromium"
-        let bf = new BrowserFetcher()
-        bf.DownloadAsync() |> wait
+type PGNiGClient(username, password, args, ?page : IPage, ?isSignedIn, ?isTest) =
+    let isTest = isTest |> Option.defaultValue true
+    let p, isSignedIn =
+        match page, isSignedIn with
+        | Some p, Some s     -> p, s
+        | Some p, None       -> p, true
+        | None,   Some false -> null, false
+        | None,   Some true  -> failwith "You can not be signed in if you don't give me a page"
+        | None,   None       -> null, false
+
+    let mutable signedIn = isSignedIn
+    let mutable p : IPage = p
 
     member this.SignIn() =
         if signedIn |> not then
             p <-
+
+                printfn "downloading chromium"
+                let bf = new BrowserFetcher()
+                bf.DownloadAsync() |> wait
+
                 let opt =
                     new LaunchOptions(Headless = false, DefaultViewport = ViewPortOptions(), Args = args)
 
