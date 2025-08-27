@@ -10,7 +10,7 @@ open System
 #load "gpt_printer.fsx"
 
 #r "nuget: FSharp.Data, 6.4.0"
-#r "nuget: PuppeteerSharp, 18.0.3"
+#r "nuget: PuppeteerSharp, 20.2.2"
 
 #load "../src/Utils.fs"
 #load "../src/pgn.fs"
