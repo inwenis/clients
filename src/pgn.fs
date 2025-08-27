@@ -22,38 +22,42 @@ type PGNiGClient(username, password, args, ?page : IPage, ?isSignedIn, ?isTest) 
     let mutable signedIn = isSignedIn
     let mutable p : IPage = p
 
+    let getPage () =
+        let bf = new BrowserFetcher()
+        let opt = new LaunchOptions(Headless = false, DefaultViewport = ViewPortOptions(), Args = args)
+        bf.DownloadAsync() |> wait
+        let brw = Puppeteer.LaunchAsync opt |> runSync
+        brw.PagesAsync() |> runSync |> Array.exactlyOne
+
+    let getPageIfNull () =
+        if p = null then
+            p <- getPage()
+        p
+
+    let signInInternal () =
+        let w = p.WaitForNetworkIdleAsync()
+        p.GoToAsync "https://ebok.pgnig.pl/" |> wait
+        printf "Waiting for page to load... "
+        w |> wait
+        printfn "done"
+        click p "xpath///button[text()='Odrzuć wszystkie']"
+        sleep 1
+        click p "xpath///i[contains(@class,'icon-close')]"
+        sleep 1
+        typet p "xpath///input[@name='identificator']" (username ())
+        typet p "xpath///input[@name='accessPin']" (password ())
+        let w = p.WaitForNetworkIdleAsync()
+        sleep 1 // I have experienced that without waiting here clicking the "submit" button has no effect
+        click p "xpath///button[@type='submit']"
+        printf "Waiting for page to load... "
+        w |> wait
+        printfn "done"
+        signedIn <- true
+
     member this.SignIn() =
+        p <- getPageIfNull()
         if signedIn |> not then
-            p <-
-
-                printfn "downloading chromium"
-                let bf = new BrowserFetcher()
-                bf.DownloadAsync() |> wait
-
-                let opt =
-                    new LaunchOptions(Headless = false, DefaultViewport = ViewPortOptions(), Args = args)
-
-                let brw = Puppeteer.LaunchAsync opt |> runSync
-                brw.PagesAsync() |> runSync |> Array.exactlyOne
-
-            let w = p.WaitForNetworkIdleAsync()
-            p.GoToAsync "https://ebok.pgnig.pl/" |> wait
-            printf "Waiting for page to load... "
-            w |> wait
-            printfn "done"
-            click p "xpath///button[text()='Odrzuć wszystkie']"
-            sleep 1
-            click p "xpath///i[contains(@class,'icon-close')]"
-            sleep 1
-            typet p "xpath///input[@name='identificator']" (username ())
-            typet p "xpath///input[@name='accessPin']" (password ())
-            let w = p.WaitForNetworkIdleAsync()
-            sleep 1 // I have experienced that without waiting here clicking the "submit" button has no effect
-            click p "xpath///button[@type='submit']"
-            printf "Waiting for page to load... "
-            w |> wait
-            printfn "done"
-            signedIn <- true
+            signInInternal()
 
     member this.SubmitIndication(indication) =
         p.GoToAsync "https://ebok.pgnig.pl/odczyt" |> wait
