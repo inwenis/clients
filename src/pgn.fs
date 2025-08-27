@@ -23,9 +23,9 @@ type PGNiGClient(username, password, args, ?page : IPage, ?isSignedIn, ?isTest) 
     let mutable p : IPage = p
 
     let getPage () =
-        let bf = new BrowserFetcher()
+        // let bf = new BrowserFetcher()
         let opt = new LaunchOptions(Headless = false, DefaultViewport = ViewPortOptions(), Args = args)
-        bf.DownloadAsync() |> wait
+        // bf.DownloadAsync() |> wait
         let brw = Puppeteer.LaunchAsync opt |> runSync
         brw.PagesAsync() |> runSync |> Array.exactlyOne
 

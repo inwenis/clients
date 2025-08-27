@@ -19,9 +19,8 @@ open System.IO
 open System
 open PuppeteerSharp
 
-open clients
-open clients.Utils
-open clients.PGNIG
+open Utils
+open PGNIG
 
 let args = [| "--disable-notifications"; "--force-device-scale-factor=0.9" |]
 
@@ -31,3 +30,10 @@ c.SignIn()
 let mutable p = c.GetP()
 
 let x = p.QuerySelectorAsync("xpath///div").Result
+
+
+
+let opt = new LaunchOptions(Headless = false, DefaultViewport = ViewPortOptions(), Args = args)
+// bf.DownloadAsync() |> wait
+let brw = Puppeteer.LaunchAsync opt |> runSync
+brw.PagesAsync() |> runSync |> Array.exactlyOne
