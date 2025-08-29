@@ -7,10 +7,6 @@ open Utils
 type EnergaClient(username, password) =
     let mutable signedIn = false
     let mutable p : IPage = null
-    do
-        printfn "downloading chromium"
-        let bf = new BrowserFetcher()
-        bf.DownloadAsync() |> wait
 
 #if INTERACTIVE
     member this.GetP() = p

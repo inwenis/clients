@@ -30,10 +30,6 @@ let DEFAULT_DESTINATION = DOWNLOADS
 type AliorClient private (usernameFun, passwordFun, page, signedIn, isTest) =
     let mutable signedIn = signedIn
     let mutable p : IPage = page
-    do
-        printfn "downloading chromium"
-        let bf = new BrowserFetcher()
-        bf.DownloadAsync() |> wait
 
     /// <summary>Creates Alior client</summary>
     /// <param name="username"></param>
