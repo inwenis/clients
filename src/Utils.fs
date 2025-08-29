@@ -65,15 +65,13 @@ let waitTillHTMLRendered (page:IPage) =
     let mutable countStableSizeIterations = 0
     let minStableSizeIterations = 3
 
+    printfn "waiting till HTML is fully rendered"
     while checkCounts <= maxChecks do
         checkCounts <- checkCounts + 1
         let html = page.GetContentAsync().Result
         let currentHTMLSize = html.Length
 
-        // not sure why this is here
-        let bodyHTMLSize = page.EvaluateExpressionAsync("() => document.body.innerHTML.length").Result
-
-        printfn "last: %A <> curr: %A body html size: %A" lastHTMLSize currentHTMLSize bodyHTMLSize
+        printfn "lstHTMLSize: %d <> currentHTMLSize: %d" lastHTMLSize currentHTMLSize
 
         if lastHTMLSize <> 0 && currentHTMLSize = lastHTMLSize then
             countStableSizeIterations <- countStableSizeIterations + 1
@@ -81,11 +79,11 @@ let waitTillHTMLRendered (page:IPage) =
             countStableSizeIterations <- 0 //reset the counter
 
         if countStableSizeIterations >= minStableSizeIterations then
-            printfn "Page rendered fully.."
+            printfn "page fully rendered"
             checkCounts <- maxChecks+1
 
         lastHTMLSize <- currentHTMLSize
-        sleep (checkDurationMilliseconds/1000)
+        Thread.Sleep checkDurationMilliseconds
 
 let env name = fun _ -> Environment.GetEnvironmentVariable(name)
 
