@@ -23,5 +23,6 @@ let main argv =
     let client = EnergaClient(env "ENERGA_USERNAME", env "ENERGA_PASSWORD", isTest=true)
     client.SignIn()
     let d = client.SubmitIndication("a", 123)
+    printfn "Submitted indication, received response: %A" d
 
     0

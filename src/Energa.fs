@@ -1,5 +1,7 @@
 module Energa
 
+open System
+open System.IO
 open PuppeteerSharp
 open Utils
 
@@ -49,37 +51,41 @@ type EnergaClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest
         w |> wait
         waitTillHTMLRendered p
 
-        typet p "xpath///input[@name='value1']" $"{indication}"
-        let w2 = p.WaitForNavigationAsync()
-        click p "xpath///button[contains(text(),'Sprawdź')]"
+        if isTest |> not then
+            typet p "xpath///input[@name='value1']" $"{indication}"
+            let w = p.WaitForNavigationAsync()
+            click p "xpath///button[contains(text(),'Sprawdź')]"
 
-        w2 |> wait
-        waitTillHTMLRendered p
+            w |> wait
+            waitTillHTMLRendered p
 
-        printfn "dumping page in case extraction fails"
-        let content = p.GetContentAsync().Result
-        let tempFilePath = System.IO.Path.GetTempFileName()
-        System.IO.File.WriteAllText(tempFilePath, content)
-        printfn "dumped content to %A" tempFilePath
+            printfn "dumping page in case extraction fails"
+            let content = p.GetContentAsync().Result
+            let tempFilePath = System.IO.Path.GetTempFileName()
+            System.IO.File.WriteAllText(tempFilePath, content)
+            printfn "dumped content to %A" tempFilePath
 
-        printfn "extracting amount"
-        let amountText =
-            let node = p.WaitForSelectorAsync("xpath///*[contains(text(), 'Kwota do zapłaty')]").Result
-            node.GetPropertyAsync("textContent").Result.ToString()
-        let amount =
-            amountText
-            |> regexRemove "JSHandle:Kwota do zapłaty:"
-            |> regexRemove "zł"
-            |> regexReplace "," "."
-            |> decimal
-        printfn "Extracted amount %A" amount
-        click p "xpath///button[contains(text(),'Zatwierdź')]"
-        try
-            printfn "Waiting for 'Gratulacje' to appear"
-            p.WaitForSelectorAsync("xpath///*[contains(text(), 'Gratulacje')]") |> wait
-            printfn "Clicking 'powrót'"
-            click p "xpath///button[contains(text(),'powrót')]"
-        with e -> printfn "%A" e
-        amount
+            printfn "extracting amount"
+            let amountText =
+                let node = p.WaitForSelectorAsync("xpath///*[contains(text(), 'Kwota do zapłaty')]").Result
+                node.GetPropertyAsync("textContent").Result.ToString()
+            let amount =
+                amountText
+                |> regexRemove "JSHandle:Kwota do zapłaty:"
+                |> regexRemove "zł"
+                |> regexReplace "," "."
+                |> decimal
+            printfn "Extracted amount %A" amount
+            click p "xpath///button[contains(text(),'Zatwierdź')]"
+            try
+                printfn "Waiting for 'Gratulacje' to appear"
+                p.WaitForSelectorAsync("xpath///*[contains(text(), 'Gratulacje')]") |> wait
+                printfn "Clicking 'powrót'"
+                click p "xpath///button[contains(text(),'powrót')]"
+            with e -> printfn "%A" e
+            amount
+        else
+            printfn "Skipping indication submission in test mode"
+            Decimal.MinValue // return a value indicating no submission occurred
 
     member this.GetP() = p
