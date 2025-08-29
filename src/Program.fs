@@ -19,6 +19,8 @@ let main argv =
 
     printfn "%A" args
 
+    downloadDefaultBrowser()
+
     let client = PGNiGClient(env "PGNIG_USERNAME", env "PGNIG_PASSWORD", args)
 
     client.SignIn()
