@@ -26,10 +26,8 @@ type PGNiGClient(username, password, args, ?page : IPage, ?isSignedIn, ?isTest) 
 
     let signInInternal () =
         let w = p.WaitForNetworkIdleAsync()
-        p.GoToAsync "https://ebok.pgnig.pl/" |> wait
-        printf "Waiting for page to load... "
+        goto p "https://ebok.pgnig.pl/"
         w |> wait
-        printfn "done"
         click p "xpath///button[text()='Odrzuć wszystkie']"
         sleep 1
         click p "xpath///i[contains(@class,'icon-close')]"
@@ -39,9 +37,7 @@ type PGNiGClient(username, password, args, ?page : IPage, ?isSignedIn, ?isTest) 
         let w = p.WaitForNetworkIdleAsync()
         sleep 1 // I have experienced that without waiting here clicking the "submit" button has no effect
         click p "xpath///button[@type='submit']"
-        printf "Waiting for page to load... "
         w |> wait
-        printfn "done"
         signedIn <- true
 
     member this.SignIn() =
@@ -51,11 +47,9 @@ type PGNiGClient(username, password, args, ?page : IPage, ?isSignedIn, ?isTest) 
             signInInternal()
 
     member this.SubmitIndication(indication) =
-        p.GoToAsync "https://ebok.pgnig.pl/odczyt" |> wait
+        goto p "https://ebok.pgnig.pl/odczyt"
 
-        printfn "Waiting for page to load... "
         waitTillHTMLRendered p
-        printfn "done"
 
         click p "xpath///i[contains(@class,'icon-close')]"
         sleep 1
@@ -66,9 +60,7 @@ type PGNiGClient(username, password, args, ?page : IPage, ?isSignedIn, ?isTest) 
 
         click p "xpath///button[contains(text(), 'Tak')]"
         // make sure the input was accepted
-        printfn "Waiting for page to load... "
         waitTillHTMLRendered p
-        printfn "done"
 
     member this.ScrapeInvoicesInternal() =
         // we rely on the index here because the list is rebuild and DOM nodes are detached
@@ -125,7 +117,7 @@ type PGNiGClient(username, password, args, ?page : IPage, ?isSignedIn, ?isTest) 
 
         p.EvaluateExpressionAsync("() => document.body.style.zoom = 0.5").Wait()
 
-        p.GoToAsync "https://ebok.pgnig.pl/faktury" |> Async.AwaitTask |> Async.RunSynchronously |> ignore
+        goto p "https://ebok.pgnig.pl/faktury"
         sleep 2
         let invoices = this.ScrapeInvoicesInternal()
 
@@ -133,7 +125,7 @@ type PGNiGClient(username, password, args, ?page : IPage, ?isSignedIn, ?isTest) 
         |> List.map parseInvoiceToStrings
 
     member this.ScrapeOverpayments() =
-        p.GoToAsync "https://ebok.pgnig.pl/umowy" |> Async.AwaitTask |> Async.RunSynchronously |> ignore
+        goto p "https://ebok.pgnig.pl/umowy"
         sleep 2
 
         let rows = p.QuerySelectorAllAsync("xpath///div[contains(@class,'table-row')]").Result

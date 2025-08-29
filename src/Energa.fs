@@ -22,17 +22,13 @@ type EnergaClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest
 
     let signInInternal () =
         let w = p.WaitForNetworkIdleAsync()
-        p.GoToAsync("https://www.24.energa.pl/") |> wait
-        printf "Waiting for page to load... "
+        goto p "https://www.24.energa.pl/"
         w |> wait
-        printfn "done"
         username() |> typet p "xpath///input[@name='username']"
         password() |> typet p "xpath///input[@name='password']"
         let w = p.WaitForNetworkIdleAsync()
         click p "xpath///button[@name='login']"
-        printf "Waiting for page to load... "
         w |> wait
-        printfn "done"
         signedIn <- true
 
     member this.SignIn() =
@@ -42,29 +38,23 @@ type EnergaClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest
             signInInternal()
 
     member this.SubmitIndication(accountName, indication) =
-        p.GoToAsync "https://24.energa.pl/ss/select-invoice-profile" |> wait
+        goto p "https://24.energa.pl/ss/select-invoice-profile"
 
-        printfn "Waiting for page to load... "
         waitTillHTMLRendered p
-        printfn "done"
 
         let w = p.WaitForNavigationAsync()
         click p $"xpath///label[contains(text(),'{accountName}')]"
         // we click a button that navigates us to a different address hence
         // we need to wait for the new page to load before we can continue
-        printfn "Waiting for page to load... "
         w |> wait
         waitTillHTMLRendered p
-        printfn "done"
 
         typet p "xpath///input[@name='value1']" $"{indication}"
         let w2 = p.WaitForNavigationAsync()
         click p "xpath///button[contains(text(),'Sprawdź')]"
 
-        printfn "Waiting for page to load... "
         w2 |> wait
         waitTillHTMLRendered p
-        printfn "done"
 
         printfn "dumping page in case extraction fails"
         let content = p.GetContentAsync().Result

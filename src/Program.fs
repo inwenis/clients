@@ -23,10 +23,4 @@ let main argv =
 
     client.SignIn()
 
-    let p = client.GetP()
-
-    printfn "%A" p
-
-    printfn "%A" (p.QuerySelectorAsync("xpath///div").Result)
-
     0

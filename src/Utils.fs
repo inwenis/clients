@@ -8,7 +8,9 @@ open PuppeteerSharp.Input
 open System.Text.RegularExpressions
 
 
-let sleep x = x |> int64 |> TimeSpan.FromSeconds |> Thread.Sleep
+let sleep x =
+    printfn "sleep %is" x
+    x |> int64 |> TimeSpan.FromSeconds |> Thread.Sleep
 
 let wait (t:Task) = t.Wait()
 
@@ -17,17 +19,26 @@ let runSync (t:Task<'a>) = t.Result
 let clickElement (e:IElementHandle) = e.ClickAsync() |> wait
 
 let clickSelector xpath (e:IElementHandle) =
+    printfn "click %s" xpath
     e.WaitForSelectorAsync(xpath) |> runSync |> clickElement
 
-let click (p:IPage) xpath = p.WaitForSelectorAsync(xpath) |> runSync |> clickElement
+let click (p:IPage) xpath =
+    printfn "click %s" xpath
+    p.WaitForSelectorAsync(xpath) |> runSync |> clickElement
 
 let typet (p:IPage) xpath text =
+    printfn "typet %s ..." xpath
     p.WaitForSelectorAsync(xpath) |> runSync |> fun x -> x.TypeAsync(text) |> wait
 
 let typeSlow (p:IPage) xpath text =
+    printfn "typeSlow %s ..." xpath
     let options = new TypeOptions()
     options.Delay <- TimeSpan.FromSeconds(seconds=1).TotalMilliseconds |> int
     p.WaitForSelectorAsync(xpath) |> runSync |> fun x -> x.TypeAsync(text, options) |> wait
+
+let goto (p:IPage) url =
+    printfn "goto %s" url
+    p.GoToAsync(url) |> wait
 
 let getAttributeNames = fun (d:IElementHandle) -> d.EvaluateFunctionAsync<string[]>("node => Array.from(node.attributes).map(x => x.name)") |> runSync
 let getAttributeValue = fun name (d:IElementHandle) -> d.EvaluateFunctionAsync<string>($"node => node.getAttribute('{name}')") |> runSync
