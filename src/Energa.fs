@@ -13,6 +13,7 @@ type EnergaClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest
         | None,   Some false -> null, false
         | None,   Some true  -> failwith "You can not be signed in if you don't give me a page"
         | None,   None       -> null, false
+    let args = args |> Option.defaultValue [||]
 
     let mutable signedIn = isSignedIn
     let mutable p : IPage = p
