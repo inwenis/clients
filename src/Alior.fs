@@ -60,7 +60,7 @@ type AliorClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest)
     do downloadDefaultBrowser ()
 
     let signInInternal() =
-        p.GoToAsync("https://system.aliorbank.pl/sign-in", timeout=60 * 1000) |> wait
+        gotoWithCustomTimeOut p "https://system.aliorbank.pl/sign-in" (60 * 1000)
         typet p "xpath///input[@id='login']" (username ())
         click p "xpath///button[@title='Next']"
         typet p "xpath///input[@id='password']" (password ())

@@ -40,6 +40,10 @@ let goto (p:IPage) url =
     printfn "goto %s" url
     p.GoToAsync(url) |> wait
 
+let gotoWithCustomTimeOut (p:IPage) url (timeoutMs:int) =
+    printfn "goto %s (timeout=%i ms)" url timeoutMs
+    p.GoToAsync(url, timeout=timeoutMs) |> wait
+
 let getAttributeNames = fun (d:IElementHandle) -> d.EvaluateFunctionAsync<string[]>("node => Array.from(node.attributes).map(x => x.name)") |> runSync
 let getAttributeValue = fun name (d:IElementHandle) -> d.EvaluateFunctionAsync<string>($"node => node.getAttribute('{name}')") |> runSync
 let getAttributes = fun (d:IElementHandle) ->
