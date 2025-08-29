@@ -17,8 +17,9 @@ let main argv =
             |> Seq.map (fun s -> s.Value)
             |> Seq.toArray
 
-    let client = PGNiGClient(env "PGNIG_USERNAME", env "PGNIG_PASSWORD", args)
+    let client = PGNiGClient(env "PGNIG_USERNAME", env "PGNIG_PASSWORD", args=args, isTest=true)
     client.SignIn()
+    client.SubmitIndication 123
 
     let client = EnergaClient(env "ENERGA_USERNAME", env "ENERGA_PASSWORD", isTest=true)
     client.SignIn()

@@ -9,7 +9,7 @@ type InvoiceData = {
     AfterClickingOnInvoice: string list
 }
 
-type PGNiGClient(username, password, args, ?page : IPage, ?isSignedIn, ?isTest) =
+type PGNiGClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest) =
     let isTest = isTest |> Option.defaultValue true
     let p, isSignedIn =
         match page, isSignedIn with
@@ -18,6 +18,8 @@ type PGNiGClient(username, password, args, ?page : IPage, ?isSignedIn, ?isTest) 
         | None,   Some false -> null, false
         | None,   Some true  -> failwith "You can not be signed in if you don't give me a page"
         | None,   None       -> null, false
+
+    let args = args |> Option.defaultValue [||]
 
     let mutable signedIn = isSignedIn
     let mutable p : IPage = p
@@ -48,19 +50,16 @@ type PGNiGClient(username, password, args, ?page : IPage, ?isSignedIn, ?isTest) 
 
     member this.SubmitIndication(indication) =
         goto p "https://ebok.pgnig.pl/odczyt"
-
         waitTillHTMLRendered p
-
         click p "xpath///i[contains(@class,'icon-close')]"
         sleep 1
-
-        p.TypeAsync("xpath///input[@id='reading-0']", indication |> string) |> wait
-
-        click p "xpath///button[contains(text(), 'Zapisz odczyt')]"
-
-        click p "xpath///button[contains(text(), 'Tak')]"
-        // make sure the input was accepted
-        waitTillHTMLRendered p
+        if isTest |> not then
+            typet p "xpath///input[@id='reading-0']" (indication |> string)
+            click p "xpath///button[contains(text(), 'Zapisz odczyt')]"
+            click p "xpath///button[contains(text(), 'Tak')]"
+            waitTillHTMLRendered p // make sure the input was accepted
+        else
+            printfn "Skipping indication submission in test mode"
 
     member this.ScrapeInvoicesInternal() =
         // we rely on the index here because the list is rebuild and DOM nodes are detached
