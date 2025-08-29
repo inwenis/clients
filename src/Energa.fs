@@ -8,10 +8,6 @@ type EnergaClient(username, password) =
     let mutable signedIn = false
     let mutable p : IPage = null
 
-#if INTERACTIVE
-    member this.GetP() = p
-#endif
-
     member this.SingIn() =
         if signedIn |> not then
             p <-
@@ -83,3 +79,5 @@ type EnergaClient(username, password) =
             click p "xpath///button[contains(text(),'powrót')]"
         with e -> printfn "%A" e
         amount
+
+    member this.GetP() = p

@@ -171,8 +171,6 @@ type AliorClient private (usernameFun, passwordFun, page, signedIn, isTest) =
         else
             printfn "Test mode - not sending the transfer"
 
-    member this.GetP() = p
-
     member this.Scrape(?destination, ?period, ?count) =
         let dest = destination |> Option.defaultValue DEFAULT_DESTINATION
         let period =
@@ -266,3 +264,5 @@ type AliorClient private (usernameFun, passwordFun, page, signedIn, isTest) =
             let text = File.ReadAllText(x, ALIOR_ENCODING)
             File.WriteAllText(x, text, Encoding.UTF8)
             x)
+
+    member this.GetP() = p
