@@ -17,6 +17,8 @@ type EnergaClient(username, password, args, ?page : IPage, ?isSignedIn, ?isTest)
     let mutable signedIn = isSignedIn
     let mutable p : IPage = p
 
+    do downloadDefaultBrowser ()
+
     let signInInternal () =
         let w = p.WaitForNetworkIdleAsync()
         p.GoToAsync("https://www.24.energa.pl/") |> wait

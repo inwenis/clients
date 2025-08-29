@@ -25,7 +25,6 @@ open PGNIG
 let args = [| "--disable-notifications"; "--force-device-scale-factor=0.9" |]
 
 
-downloadDefaultBrowser()
 let c = PGNiGClient(env "PGNIG_USERNAME", env "PGNIG_PASSWORD", args)
 c.SignIn()
 let mutable p = c.GetP()
