@@ -9,7 +9,7 @@
 open System
 open System.IO
 
-open clients.AliorParsing
+open AliorParsing
 
 
 let rows = Directory.EnumerateFiles(@"c:\git\alior-scrape", "Historia_Operacji_*.csv.CSV") |> parseFiles

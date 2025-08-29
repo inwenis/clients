@@ -4,7 +4,7 @@ open PuppeteerSharp
 open Utils
 
 
-type EnergaClient(username, password, args, ?page : IPage, ?isSignedIn, ?isTest) =
+type EnergaClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest) =
     let isTest = isTest |> Option.defaultValue true
     let p, isSignedIn =
         match page, isSignedIn with

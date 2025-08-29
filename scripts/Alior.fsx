@@ -8,9 +8,8 @@ open System.IO
 open System
 open PuppeteerSharp
 
-open clients
-open clients.Utils
-open clients.Alior
+open Utils
+open Alior
 
 let ac = AliorClient(env "ALIOR_USERNAME", env "ALIOR_PASSWORD", isTest=true)
 //#load "Alior.fs"

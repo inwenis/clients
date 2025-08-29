@@ -10,9 +10,8 @@ open System.IO
 open System
 open PuppeteerSharp
 
-open clients
-open clients.Utils
-open clients.Energa
+open Utils
+open Energa
 
 let c = EnergaClient(env "ENERGA_USERNAME", env "ENERGA_PASSWORD")
-c.SingIn()
+c.SignIn()
