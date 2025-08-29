@@ -22,16 +22,6 @@ type PGNiGClient(username, password, args, ?page : IPage, ?isSignedIn, ?isTest) 
     let mutable signedIn = isSignedIn
     let mutable p : IPage = p
 
-    let getPage () =
-        let opt = new LaunchOptions(Headless = false, DefaultViewport = ViewPortOptions(), Args = args)
-        let brw = Puppeteer.LaunchAsync opt |> runSync
-        brw.PagesAsync() |> runSync |> Array.exactlyOne
-
-    let getPageIfNull () =
-        if p = null then
-            p <- getPage()
-        p
-
     let signInInternal () =
         let w = p.WaitForNetworkIdleAsync()
         p.GoToAsync "https://ebok.pgnig.pl/" |> wait
@@ -53,7 +43,8 @@ type PGNiGClient(username, password, args, ?page : IPage, ?isSignedIn, ?isTest) 
         signedIn <- true
 
     member this.SignIn() =
-        p <- getPageIfNull()
+        if p = null then
+            p <- getPage args
         if signedIn |> not then
             signInInternal()
 

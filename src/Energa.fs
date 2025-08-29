@@ -4,30 +4,39 @@ open PuppeteerSharp
 open Utils
 
 
-type EnergaClient(username, password) =
-    let mutable signedIn = false
-    let mutable p : IPage = null
+type EnergaClient(username, password, args, ?page : IPage, ?isSignedIn, ?isTest) =
+    let isTest = isTest |> Option.defaultValue true
+    let p, isSignedIn =
+        match page, isSignedIn with
+        | Some p, Some s     -> p, s
+        | Some p, None       -> p, true
+        | None,   Some false -> null, false
+        | None,   Some true  -> failwith "You can not be signed in if you don't give me a page"
+        | None,   None       -> null, false
 
-    member this.SingIn() =
+    let mutable signedIn = isSignedIn
+    let mutable p : IPage = p
+
+    let signInInternal () =
+        let w = p.WaitForNetworkIdleAsync()
+        p.GoToAsync("https://www.24.energa.pl/") |> wait
+        printf "Waiting for page to load... "
+        w |> wait
+        printfn "done"
+        username() |> typet p "xpath///input[@name='username']"
+        password() |> typet p "xpath///input[@name='password']"
+        let w = p.WaitForNetworkIdleAsync()
+        click p "xpath///button[@name='login']"
+        printf "Waiting for page to load... "
+        w |> wait
+        printfn "done"
+        signedIn <- true
+
+    member this.SignIn() =
+        if p = null then
+            p <- getPage args
         if signedIn |> not then
-            p <-
-                let l_options = new LaunchOptions(Headless = false, DefaultViewport = ViewPortOptions())
-                let b = Puppeteer.LaunchAsync(l_options) |> runSync
-                b.PagesAsync() |> runSync |> Array.exactlyOne
-
-            let w = p.WaitForNetworkIdleAsync()
-            p.GoToAsync("https://www.24.energa.pl/") |> wait
-            printf "Waiting for page to load... "
-            w |> wait
-            printfn "done"
-            username() |> typet p "xpath///input[@name='username']"
-            password() |> typet p "xpath///input[@name='password']"
-            let w = p.WaitForNetworkIdleAsync()
-            click p "xpath///button[@name='login']"
-            printf "Waiting for page to load... "
-            w |> wait
-            printfn "done"
-            signedIn <- true
+            signInInternal()
 
     member this.SubmitIndication(accountName, indication) =
         p.GoToAsync "https://24.energa.pl/ss/select-invoice-profile" |> wait

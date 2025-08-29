@@ -87,3 +87,8 @@ let downloadDefaultBrowser () =
 
     if isDefaultBrowserAvailable |> not then
         fetcher.DownloadAsync() |> wait
+
+let getPage args =
+    let opt = new LaunchOptions(Headless = false, DefaultViewport = ViewPortOptions(), Args = args)
+    let brw = Puppeteer.LaunchAsync opt |> runSync
+    brw.PagesAsync() |> runSync |> Array.exactlyOne
