@@ -4,6 +4,10 @@ open PGNIG
 open Utils
 open Energa
 
+// This is only a dummy app that I use to test the clients.
+// Currently the clients are meant to be used in an FSI environment.
+// Clients are meant to be referenced via paket's github file reference.
+
 [<EntryPoint>]
 let main argv =
     let config =
