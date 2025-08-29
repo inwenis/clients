@@ -12,3 +12,4 @@ The clients are meant to be referenced via paket's [GitHub dependencies](https:/
 - add C# config tutorial
 - add F# example
 - add example using https://fsprojects.github.io/Paket/fsi-integration.html
+- close clients when done, maybe implement IDisposable?
