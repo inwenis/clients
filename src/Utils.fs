@@ -77,3 +77,18 @@ let waitTillHTMLRendered (page:IPage) =
         sleep (checkDurationMilliseconds/1000)
 
 let env name = fun _ -> Environment.GetEnvironmentVariable(name)
+
+let downloadDefaultBrowser () =
+    let fetcher = new BrowserFetcher()
+
+    let isDefaultBrowserAvailable =
+        fetcher.GetInstalledBrowsers()
+        |> Seq.length > 0
+
+    if isDefaultBrowserAvailable |> not then
+        fetcher.DownloadAsync() |> wait
+
+let getPage args =
+    let opt = new LaunchOptions(Headless = false, DefaultViewport = ViewPortOptions(), Args = args)
+    let brw = Puppeteer.LaunchAsync opt |> runSync
+    brw.PagesAsync() |> runSync |> Array.exactlyOne

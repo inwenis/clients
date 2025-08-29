@@ -1,4 +1,4 @@
-#r "nuget: PuppeteerSharp, 18.0.3"
+#r "nuget: PuppeteerSharp, 20.2.2"
 
 open PuppeteerSharp
 

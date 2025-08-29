@@ -9,9 +9,9 @@ open FSharp.Data
 
 
 type Transfers = CsvProvider<"""FromAccount,ReceiverName,ReceiverAccount,TransferText,Amount,InsertedDateTime,Status,Type
-Billing account name is long to align with head,Receiver1,   12 1234 1234 12,Title of tra, 58.00,2023-03-01T00:00:00.0000000+02:00,ToBeExecuted,Regular
-Billing account name is long to align with head,Receiver3,   12 1234 1234 12,Title of tra, 12.52,2023-03-01T00:00:00.0000000+02:00,ToBeExecuted,Regular
-Billing account name is long to align with head,Receiver2,   12 1234 1234 12,Title of tra, 27.95,2023-03-01T00:00:00.0000000+02:00,Executed,Tax
+Billing account name is long to align      ,Receiver1   ,12 1234 1234 12,Title of tra, 58.00,2023-03-01T00:00:00.0000000+02:00,ToBeExecuted,Regular
+Billing account name is long to align      ,Receiver3   ,12 1234 1234 12,Title of tra, 12.52,2023-03-01T00:00:00.0000000+02:00,ToBeExecuted,Regular
+Billing account name is long to align      ,Receiver2   ,12 1234 1234 12,Title of tra, 27.95,2023-03-01T00:00:00.0000000+02:00,Executed,Tax
 """>
 
 
@@ -27,48 +27,52 @@ let HOME = Environment.GetFolderPath Environment.SpecialFolder.UserProfile
 let DOWNLOADS = Path.Combine(HOME, "Downloads") // puppeteer downloads files to this folder
 let DEFAULT_DESTINATION = DOWNLOADS
 
-type AliorClient private (usernameFun, passwordFun, page, signedIn, isTest) =
-    let mutable signedIn = signedIn
-    let mutable p : IPage = page
-    do
-        printfn "downloading chromium"
-        let bf = new BrowserFetcher()
-        bf.DownloadAsync() |> wait
+/// <summary>Creates Alior client</summary>
+/// <param name="username"></param>
+/// <param name="password"></param>
+/// <param name="args"></param>
+/// <param name="page"></param>
+/// <param name="isSignedIn"></param>
+/// <param name="isTest">default to 'false'. If 'true' the client will not send transfers.</param>
+type AliorClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest) =
+    let isTest = isTest |> Option.defaultValue true
+    let p, isSignedIn =
+        match page, isSignedIn with
+        | Some p, Some s     -> p, s
+        | Some p, None       -> p, true
+        | None,   Some false -> null, false
+        | None,   Some true  -> failwith "You can not be signed in if you don't give me a page"
+        | None,   None       -> null, false
 
-    /// <summary>Creates Alior client</summary>
-    /// <param name="username"></param>
-    /// <param name="password"></param>
-    /// <param name="page"></param>
-    /// <param name="isTest">default to 'false'. If 'true' the client will not send transfers.</param>
-    new(username, password, ?page, ?isTest) =
-        let page, isAlreadySingedIn =
-            match page with
-            | Some x -> x, true
-            | None -> null, false
-        let isTest = isTest |> Option.defaultValue false
-        AliorClient(username, password, page, isAlreadySingedIn, isTest)
+    let args =
+        match args with
+        | Some a -> a
+        | None -> [|
+            "--lang=en-GB" // many xpaths depend on English texts, this arg ensures the browser is launched in English
+            // the default window run on my laptop is too small to display the whole menu
+            // instead of supporting "hidden" menu we just "zoom out" by setting this arg
+            "--force-device-scale-factor=0.5"
+        |]
+
+    let mutable signedIn = isSignedIn
+    let mutable p : IPage = p
+
+    let signInInternal() =
+        p.GoToAsync("https://system.aliorbank.pl/sign-in", timeout=60 * 1000) |> wait
+        typet p "xpath///input[@id='login']" (username ())
+        click p "xpath///button[@title='Next']"
+        typet p "xpath///input[@id='password']" (password ())
+        click p "xpath///button[@id='password-submit']"
+        click p "xpath///button[contains(text(),'One-time access')]"
+        p.WaitForSelectorAsync("xpath///*[contains(text(),'My wallet')]") |> wait // we wait for the main page to load after logging in
+        sleep 2
+        signedIn <- true
 
     member this.SignIn() =
+        if p = null then
+            p <- getPage args
         if signedIn |> not then
-            p <-
-                let args = [|
-                    "--lang=en-GB" // many xpaths depend on English texts, this arg ensures the browser is launched in English
-                    // the default window run on my laptop is too small to display the whole menu
-                    // insted of supporting "hidden" menu we just "zoom out" by setting this arg
-                    "--force-device-scale-factor=0.5"
-                |]
-                let l_options = new LaunchOptions(Headless = false, DefaultViewport = ViewPortOptions(), Args = args)
-                let b = Puppeteer.LaunchAsync(l_options) |> runSync
-                b.PagesAsync() |> runSync |> Array.exactlyOne
-            p.GoToAsync("https://system.aliorbank.pl/sign-in", timeout=60 * 1000) |> wait
-            typet p "xpath///input[@id='login']" (usernameFun ())
-            click p "xpath///button[@title='Next']"
-            typet p "xpath///input[@id='password']" (passwordFun ())
-            click p "xpath///button[@id='password-submit']"
-            click p "xpath///button[contains(text(),'One-time access')]"
-            p.WaitForSelectorAsync("xpath///*[contains(text(),'My wallet')]") |> wait // we wait for the main page to load after logging in
-            sleep 2
-            signedIn <- true
+            signInInternal()
 
     member this.OpenNewPayment() =
         this.SignIn()
@@ -175,8 +179,6 @@ type AliorClient private (usernameFun, passwordFun, page, signedIn, isTest) =
         else
             printfn "Test mode - not sending the transfer"
 
-    member this.GetP() = p
-
     member this.Scrape(?destination, ?period, ?count) =
         let dest = destination |> Option.defaultValue DEFAULT_DESTINATION
         let period =
@@ -270,3 +272,5 @@ type AliorClient private (usernameFun, passwordFun, page, signedIn, isTest) =
             let text = File.ReadAllText(x, ALIOR_ENCODING)
             File.WriteAllText(x, text, Encoding.UTF8)
             x)
+
+    member this.GetP() = p

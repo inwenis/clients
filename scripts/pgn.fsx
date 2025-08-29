@@ -10,7 +10,7 @@ open System
 #load "gpt_printer.fsx"
 
 #r "nuget: FSharp.Data, 6.4.0"
-#r "nuget: PuppeteerSharp, 18.0.3"
+#r "nuget: PuppeteerSharp, 20.2.2"
 
 #load "../src/Utils.fs"
 #load "../src/pgn.fs"
@@ -19,15 +19,16 @@ open System.IO
 open System
 open PuppeteerSharp
 
-open clients
-open clients.Utils
-open clients.PGNIG
+open Utils
+open PGNIG
 
 let args = [| "--disable-notifications"; "--force-device-scale-factor=0.9" |]
 
-let c = PGNiGClient(env "PGNIG_USERNAME", env "PGNIG_PASSWORD", args)
 
+downloadDefaultBrowser()
+let c = PGNiGClient(env "PGNIG_USERNAME", env "PGNIG_PASSWORD", args)
 c.SignIn()
 let mutable p = c.GetP()
-
 let x = p.QuerySelectorAsync("xpath///div").Result
+
+
