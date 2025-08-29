@@ -24,16 +24,11 @@ open PGNIG
 
 let args = [| "--disable-notifications"; "--force-device-scale-factor=0.9" |]
 
-let c = PGNiGClient(env "PGNIG_USERNAME", env "PGNIG_PASSWORD", args)
 
+downloadDefaultBrowser()
+let c = PGNiGClient(env "PGNIG_USERNAME", env "PGNIG_PASSWORD", args)
 c.SignIn()
 let mutable p = c.GetP()
-
 let x = p.QuerySelectorAsync("xpath///div").Result
 
 
-
-let opt = new LaunchOptions(Headless = false, DefaultViewport = ViewPortOptions(), Args = args)
-// bf.DownloadAsync() |> wait
-let brw = Puppeteer.LaunchAsync opt |> runSync
-brw.PagesAsync() |> runSync |> Array.exactlyOne
