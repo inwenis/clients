@@ -75,7 +75,7 @@ type AliorClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest)
         if signedIn |> not then
             signInInternal()
 
-    member this.OpenNewPayment() =
+    member private this.OpenNewPayment() =
         this.SignIn()
         // scrolling up by any amount (-1px in this case) makes the top menu appear (if it's hidden)
         p.EvaluateExpressionAsync("window.scrollBy(0, -1)") |> wait

@@ -9,8 +9,33 @@ open Alior
 // Currently the clients are meant to be used in an FSI environment.
 // Install them via paket's github file reference.
 
+let testAlior () =
+    let c = AliorClient(env "ALIOR_USERNAME", env "ALIOR_PASSWORD", isTest=true)
+
+    let dummyTaxTransfer = Transfers.Row("", "asdf", "84101000712221000000000000", "2024/April", 123M, DateTimeOffset.UtcNow, "asdf", "asdf")
+    let dummyRegTransfer = Transfers.Row("", "asdf", "91113000070080239435200002", "asdf", 1M, DateTimeOffset.UtcNow, "asdf", "asdf")
+
+    c.SignIn()
+    c.Scrape(count=1) |> ignore
+    c.GetP() |> ignore
+    c.TransferTax(dummyTaxTransfer, "Pierwszy Urząd Skarbowy Warszawa")
+    c.TransferRegular dummyRegTransfer
+
+    printfn "if we reached this line without errors all must be good!"
+
+let testPGNIG args =
+    let c = PGNiGClient(env "PGNIG_USERNAME", env "PGNIG_PASSWORD", args=args, isTest=true)
+    c.SignIn()
+    c.SubmitIndication 123
+
+let testEnerga () =
+    let c = EnergaClient(env "ENERGA_USERNAME", env "ENERGA_PASSWORD", isTest=true)
+    c.SignIn()
+    let d = c.SubmitIndication("a", 123)
+    printfn "Submitted indication, received response: %A" d
+
 [<EntryPoint>]
-let main argv =
+let main _ =
     let config =
         ConfigurationBuilder()
             .SetBasePath(AppContext.BaseDirectory)
@@ -22,18 +47,10 @@ let main argv =
             |> Seq.map (fun s -> s.Value)
             |> Seq.toArray
 
-    let c1 = AliorClient(env "ALIOR_USERNAME", env "ALIOR_PASSWORD", isTest=true)
-    c1.SignIn()
-    let scraped = c1.Scrape(count=1)
-    printfn "Scraped data: %A" scraped
+    testAlior ()
 
-    let c2 = PGNiGClient(env "PGNIG_USERNAME", env "PGNIG_PASSWORD", args=args, isTest=true)
-    c2.SignIn()
-    c2.SubmitIndication 123
+    testPGNIG args
 
-    let c3 = EnergaClient(env "ENERGA_USERNAME", env "ENERGA_PASSWORD", isTest=true)
-    c3.SignIn()
-    let d = c3.SubmitIndication("a", 123)
-    printfn "Submitted indication, received response: %A" d
+    testEnerga ()
 
     0
