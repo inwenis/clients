@@ -33,6 +33,6 @@ let mutable p = c.GetP()
 #load "../src/pgn.fs"
 open Utils
 open PGNIG
-let c = PGNiGClient(env "PGNIG_USERNAME", env "PGNIG_PASSWORD", page = p, args = args)
+// let c = PGNiGClient(env "PGNIG_USERNAME", env "PGNIG_PASSWORD", page = p, args = args)
 
 c.ScrapeInvoices()

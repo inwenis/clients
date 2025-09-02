@@ -5,8 +5,8 @@ open Utils
 
 
 type InvoiceData = {
-    BeforeClickingOnInvoice: string list
-    AfterClickingOnInvoice: string list
+    BeforeClickingOnInvoice: string []
+    AfterClickingOnInvoice: string []
 }
 
 type PGNiGClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest) =
@@ -66,8 +66,7 @@ type PGNiGClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest)
                     sleep 1
                     let details_text =
                         querySingle p "xpath///div[@class='ModalContent']"
-                        |> fun x -> x.GetPropertyAsync("textContent").Result
-                        |> string // get all the text of the modal that displays the invoice's details
+                        |> getText // get all the text of the modal that displays the invoice's details
                     if details_text.Contains("Numer faktury") then details_loaded <- true
                     if details_text.Contains("Numer noty") then details_loaded <- true
 
@@ -100,14 +99,11 @@ type PGNiGClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest)
             printfn "Skipping indication submission in test mode"
 
     member this.ScrapeInvoices() =
-        let getAllTexts (x:IElementHandle) =
-            queryElementAll x "xpath/.//text()"
-            |> Array.map (fun x -> x.GetPropertyAsync("textContent").Result.JsonValueAsync().Result |> string)
-            |> List.ofArray
+        let getAllTexts (x:IElementHandle) = queryElementAll x "xpath/.//text()" |> Array.map getText
 
         let parseInvoiceToStrings (before : IElementHandle array, after : IElementHandle array) =
-            let before = before |> List.ofArray |> List.collect getAllTexts |> List.map (fun x -> x.Trim()) |> List.filter (fun x -> x <> "")
-            let after  = after  |> List.ofArray |> List.collect getAllTexts |> List.map (fun x -> x.Trim()) |> List.filter (fun x -> x <> "")
+            let before = before |> Array.collect getAllTexts |> Array.map (fun x -> x.Trim()) |> Array.filter (fun x -> x <> "")
+            let after  = after  |> Array.collect getAllTexts |> Array.map (fun x -> x.Trim()) |> Array.filter (fun x -> x <> "")
             {
                 BeforeClickingOnInvoice = before
                 AfterClickingOnInvoice = after
@@ -128,12 +124,10 @@ type PGNiGClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest)
         let rows = queryAll p "xpath///div[contains(@class,'table-row')]"
 
         rows
-        |> List.ofArray
-        |> List.map (fun row ->
+        |> Array.map (fun row ->
             queryElementAll row "xpath/.//div[contains(@class,'columns')]"
-            |> List.ofArray
-            |> List.map (fun cell -> cell.EvaluateFunctionAsync<string>("el => el.textContent").Result)
-            |> List.map (fun x -> x.Trim())
-            |> List.filter (fun x -> x <> "") )
+            |> Array.map getText
+            |> Array.map (fun x -> x.Trim())
+            |> Array.filter (fun x -> x <> "") )
 
     member this.GetP() = p

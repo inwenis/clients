@@ -60,6 +60,9 @@ let queryElementSingle (e:IElementHandle) xpath =
     printfn "querySingle %s" xpath
     e.QuerySelectorAsync xpath |> runSync
 
+let getText (e:IElementHandle) =
+    e.GetPropertyAsync("textContent").Result |> string
+
 let getAttributeNames = fun (d:IElementHandle) -> d.EvaluateFunctionAsync<string[]>("node => Array.from(node.attributes).map(x => x.name)") |> runSync
 let getAttributeValue = fun name (d:IElementHandle) -> d.EvaluateFunctionAsync<string>($"node => node.getAttribute('{name}')") |> runSync
 let getAttributes = fun (d:IElementHandle) ->

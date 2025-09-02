@@ -68,7 +68,7 @@ type EnergaClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest
             printfn "extracting amount"
             let amountText =
                 let node = p.WaitForSelectorAsync("xpath///*[contains(text(), 'Kwota do zapłaty')]").Result
-                node.GetPropertyAsync("textContent").Result.ToString()
+                getText node
             let amount =
                 amountText
                 |> regexRemove "JSHandle:Kwota do zapłaty:"
