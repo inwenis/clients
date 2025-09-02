@@ -112,10 +112,6 @@ type PGNiGClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest)
                 AfterClickingOnInvoice = after
             }
 
-        // await page.evaluate(() => document.body.style.zoom = 0.5  );
-
-        p.EvaluateExpressionAsync("() => document.body.style.zoom = 0.5").Wait()
-
         goto p "https://ebok.pgnig.pl/faktury"
         sleep 2
         let invoices = ScrapeInvoicesInternal()
