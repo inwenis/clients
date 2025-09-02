@@ -42,26 +42,7 @@ type PGNiGClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest)
         w |> wait
         signedIn <- true
 
-    member this.SignIn() =
-        if p = null then
-            p <- getPage args
-        if signedIn |> not then
-            signInInternal()
-
-    member this.SubmitIndication(indication) =
-        goto p "https://ebok.pgnig.pl/odczyt"
-        waitTillHTMLRendered p
-        click p "xpath///i[contains(@class,'icon-close')]"
-        sleep 1
-        if isTest |> not then
-            typet p "xpath///input[@id='reading-0']" (indication |> string)
-            click p "xpath///button[contains(text(), 'Zapisz odczyt')]"
-            click p "xpath///button[contains(text(), 'Tak')]"
-            waitTillHTMLRendered p // make sure the input was accepted
-        else
-            printfn "Skipping indication submission in test mode"
-
-    member this.ScrapeInvoicesInternal() =
+    let ScrapeInvoicesInternal () =
         // we rely on the index here because the list is rebuild and DOM nodes are detached
         let invoice_indexes =
             p.QuerySelectorAllAsync("xpath///div[contains(@class,'table-row')]").Result
@@ -98,6 +79,25 @@ type PGNiGClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest)
 
         invoices
 
+    member this.SignIn() =
+        if p = null then
+            p <- getPage args
+        if signedIn |> not then
+            signInInternal()
+
+    member this.SubmitIndication(indication) =
+        goto p "https://ebok.pgnig.pl/odczyt"
+        waitTillHTMLRendered p
+        click p "xpath///i[contains(@class,'icon-close')]"
+        sleep 1
+        if isTest |> not then
+            typet p "xpath///input[@id='reading-0']" (indication |> string)
+            click p "xpath///button[contains(text(), 'Zapisz odczyt')]"
+            click p "xpath///button[contains(text(), 'Tak')]"
+            waitTillHTMLRendered p // make sure the input was accepted
+        else
+            printfn "Skipping indication submission in test mode"
+
     member this.ScrapeInvoices() =
         let getAllTexts (x:IElementHandle) =
             x.QuerySelectorAllAsync("xpath/.//text()").Result
@@ -118,7 +118,7 @@ type PGNiGClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest)
 
         goto p "https://ebok.pgnig.pl/faktury"
         sleep 2
-        let invoices = this.ScrapeInvoicesInternal()
+        let invoices = ScrapeInvoicesInternal()
 
         invoices
         |> List.map parseInvoiceToStrings

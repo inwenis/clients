@@ -27,5 +27,7 @@ let args = [| "--disable-notifications"; "--force-device-scale-factor=0.9" |]
 
 let c = PGNiGClient(env "PGNIG_USERNAME", env "PGNIG_PASSWORD", args)
 c.SignIn()
-let mutable p = c.GetP()
-let x = p.QuerySelectorAsync("xpath///div").Result
+// let mutable p = c.GetP()
+// let x = p.QuerySelectorAsync("xpath///div").Result
+
+c.ScrapeInvoices()
