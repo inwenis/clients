@@ -80,7 +80,7 @@ type AliorClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest) 
     member private this.OpenNewPayment() =
         this.SignIn()
         // scrolling up by any amount (-1px in this case) makes the top menu appear (if it's hidden)
-        p.EvaluateExpressionAsync("window.scrollBy(0, -1)") |> wait
+        p.EvaluateExpressionAsync "window.scrollBy(0, -1)" |> wait
         sleep 2
 
         try
@@ -136,7 +136,7 @@ type AliorClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest) 
         this.SignIn()
 
         let year, month =
-            let split = transfer.TransferText.Split("/")
+            let split = transfer.TransferText.Split "/"
             split.[0], split.[1]
 
         this.OpenNewPayment()
@@ -172,7 +172,7 @@ type AliorClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest) 
         let e = waitSelector p "xpath///*[@id='obligation_year']"
         // press backspace 4 times to remove year that is there by default
         for _ in [ 1..4 ] do
-            e.PressAsync("Backspace") |> wait
+            e.PressAsync "Backspace" |> wait
 
         e.TypeAsync(year) |> wait
         sleep 1
@@ -199,7 +199,7 @@ type AliorClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest) 
         let period =
             match period with
             // we can't download transactions using the option 'All' but we can use 'Other range' with a wide range
-            | Some All -> OtherRange(DateOnly.Parse("01.01.1990"), DateTime.Today |> DateOnly.FromDateTime)
+            | Some All -> OtherRange(DateOnly.Parse "01.01.1990", DateTime.Today |> DateOnly.FromDateTime)
             | Some x -> x
             | None -> LastYear
 
