@@ -254,41 +254,46 @@ type AliorClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest) 
 
         // transactions must be downloaded per product separately. If all products are selected internal transaction are messed up.
         use w = new FileSystemWatcher(DOWNLOADS, "*.csv")
-        for product in productsXpaths |> Array.truncate count do
-            click p product
-            sleep 2
-            click p productDropDown // close drop-down
-            sleep 2
+        let downloadedFiles = [
+            for product in productsXpaths |> Array.truncate count do
+                click p product
+                sleep 2
+                click p productDropDown // close drop-down
+                sleep 2
 
-            click p "xpath///*[contains(text(),'Apply filters')]"
-            sleep 2
+                click p "xpath///*[contains(text(),'Apply filters')]"
+                sleep 2
 
-            click p "xpath///*[contains(text(),'Download')]"
-            // watch for WatcherChangeTypes.All because the file is initially created as a temporary file
-            // and when the downloading is finished it is renamed to its final name
-            // this rename triggers the watcher because the new name ends with a .csv
-            let s = w.WaitForChanged(WatcherChangeTypes.All, TimeSpan.FromSeconds 10.0)
-            printfn "File downloaded: %s" s.Name
+                click p "xpath///*[contains(text(),'Download')]"
+                // watch for WatcherChangeTypes.All because the file is initially created as a temporary file
+                // and when the downloading is finished it is renamed to its final name
+                // this rename triggers the watcher because the new name ends with a .csv
+                let s = w.WaitForChanged(WatcherChangeTypes.All, TimeSpan.FromSeconds 10.0)
+                if s.TimedOut then
+                    printfn "Downloading the file timed out, continuing with the next product"
+                else
+                    printfn "File downloaded: %s" s.Name
+                    yield s.Name
 
-            click p productDropDown
-            sleep 2
-            click p product // deselect current product
-            sleep 2
+                click p productDropDown
+                sleep 2
+                click p product // deselect current product
+                sleep 2 ]
 
-        Directory.EnumerateFiles(DOWNLOADS, "*.csv")
-        |> List.ofSeq
-        |> List.map (fun x -> new FileInfo(x))
-        |> List.filter (fun x ->
-            DateTimeOffset.UtcNow - DateTimeOffset(x.CreationTimeUtc) < TimeSpan.FromMinutes(minutes = 5))
-        |> List.sortByDescending (fun x -> x.CreationTimeUtc)
-        |> List.map (fun x ->
-            let destFullName = Path.Combine(dest, x.Name)
-            File.Move(x.FullName, destFullName)
-            destFullName)
-        |> List.map (fun x ->
+        let sourceFiles =
+            downloadedFiles
+            |> List.map (fun x -> new FileInfo(Path.Combine(DOWNLOADS, x)))
+
+        let destinationFiles =
+            sourceFiles
+            |> List.map (fun x -> Path.Combine(dest, x.Name))
+
+        for src, dest in List.zip sourceFiles destinationFiles do
             // save the files encoded as UTF-8 because I can't stand working with files encoded as Windows-1250
-            let text = File.ReadAllText(x, ALIOR_ENCODING)
-            File.WriteAllText(x, text, Encoding.UTF8)
-            x)
+            let text = File.ReadAllText(src.FullName, ALIOR_ENCODING)
+            File.WriteAllText(dest, text, Encoding.UTF8)
+
+        destinationFiles
+
 
     member this.GetP() = p
