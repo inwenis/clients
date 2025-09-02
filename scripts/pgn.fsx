@@ -22,7 +22,7 @@ open PuppeteerSharp
 open Utils
 open PGNIG
 
-let args = [| "--disable-notifications"; "--force-device-scale-factor=0.9" |]
+let args = [| "--disable-notifications"; "--force-device-scale-factor=0.5" |]
 
 let c = PGNiGClient(env "PGNIG_USERNAME", env "PGNIG_PASSWORD", args)
 let mutable p = c.GetP()
@@ -32,6 +32,6 @@ c.SignIn()
 #load "../src/pgn.fs"
 open Utils
 open PGNIG
-let c = PGNiGClient(env "PGNIG_USERNAME", env "PGNIG_PASSWORD", page = p)
+let c = PGNiGClient(env "PGNIG_USERNAME", env "PGNIG_PASSWORD", page = p, args = args)
 
 c.ScrapeInvoices()
