@@ -152,14 +152,12 @@ type AliorClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest)
         typet p "xpath///*[@id='amount.value']" (transfer.Amount |> string)
         sleep 1
 
-
         let periodDropDown = queryFirst p "xpath///custom-select[@class='obligation-period-dropdown']"
         clickElement periodDropDown
         sleep 1
         clickSelector $"xpath/(.//*[contains(text(), 'Month')])[last()]" periodDropDown
         sleep 1
-        // after selecting 'Month' the "Select month" drop-down appears
-        let monthPeriodDropDown = queryFirst p "xpath/(//custom-select[@class='obligation-period-dropdown'])[last()]"
+        // after selecting obligation-period='Month' the "Month" and "Year" input fields appear
 
         let e = waitSelector p "xpath///*[@id='obligation_year']"
         // press backspace 4 times to remove year that is there by default
@@ -168,7 +166,9 @@ type AliorClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest)
         e.TypeAsync(year) |> wait
         sleep 1
 
+        let monthPeriodDropDown = queryFirst p "xpath/(//custom-select[@class='obligation-period-dropdown'])[last()]"
         clickElement monthPeriodDropDown
+        sleep 1
         clickSelector $"xpath/(.//*[contains(text(), '{month}')])[last()]" monthPeriodDropDown
 
         if isTest |> not then
