@@ -24,7 +24,7 @@ open PGNIG
 
 let args = [| "--disable-notifications"; "--force-device-scale-factor=0.9" |]
 
-let mutable c = PGNiGClient(env "PGNIG_USERNAME", env "PGNIG_PASSWORD", args)
+let c = PGNiGClient(env "PGNIG_USERNAME", env "PGNIG_PASSWORD", args)
 let mutable p = c.GetP()
 c.SignIn()
 
@@ -32,6 +32,6 @@ c.SignIn()
 #load "../src/pgn.fs"
 open Utils
 open PGNIG
-c <- PGNiGClient(env "PGNIG_USERNAME", env "PGNIG_PASSWORD", page = p)
+let c = PGNiGClient(env "PGNIG_USERNAME", env "PGNIG_PASSWORD", page = p)
 
 c.ScrapeInvoices()

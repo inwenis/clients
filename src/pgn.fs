@@ -115,6 +115,10 @@ type PGNiGClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest)
 
         goto p "https://ebok.pgnig.pl/faktury"
         sleep 2
+        // because we use `goto` to navigate instead of buttons on the SPA
+        // we need to close the pop-up again
+        click p "xpath///i[contains(@class,'icon-close')]"
+        sleep 1
         ScrapeInvoicesInternal () |> List.map parseInvoiceToStrings
 
     member this.ScrapeOverpayments() =
