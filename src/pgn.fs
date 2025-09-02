@@ -44,21 +44,19 @@ type PGNiGClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest)
 
     let ScrapeInvoicesInternal () =
         // we rely on the index here because the list is rebuild and DOM nodes are detached
-        let invoice_indexes =
-            p.QuerySelectorAllAsync("xpath///div[contains(@class,'table-row')]").Result
-            |> Array.mapi (fun i _ -> i)
+        let invoice_indexes = queryAll p "xpath///div[contains(@class,'table-row')]" |> Array.mapi (fun i _ -> i)
 
         let invoices = [
             for index in invoice_indexes do
                 let invoice_row =
-                    p.QuerySelectorAllAsync("xpath///div[contains(@class,'table-row')]").Result
+                    queryAll p "xpath///div[contains(@class,'table-row')]"
                     |> Array.mapi (fun i x -> i, x)
                     |> Array.find (fun (i,_) -> i = index)
                     |> snd
 
                 // the "amount to pay is only available in the table before clicking on a invoice"
-                let invoice_row_cells = invoice_row.QuerySelectorAllAsync("xpath/./div/div").Result
-                invoice_row.QuerySelectorAsync("xpath/.//i[contains(@class,'icon-zoom')]").Result.ClickAsync().Wait() // click the magnifier to show details of the invoice
+                let invoice_row_cells = queryElementAll invoice_row "xpath/./div/div"
+                clickSelector "xpath/.//i[contains(@class,'icon-zoom')]" invoice_row // click the magnifier to show details of the invoice
 
                 // some invoices take long to load
                 let mutable details_loaded = false
@@ -66,14 +64,17 @@ type PGNiGClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest)
                     // wait to avoid busy waiting
                     // wait before the first check as querying for the modal immediately after clicking the magnifier will return null
                     sleep 1
-                    let details_text = p.QuerySelectorAsync("xpath///div[@class='ModalContent']").Result.GetPropertyAsync("textContent").Result |> string // get all the text of the modal that displays the invoice's details
+                    let details_text =
+                        querySingle p "xpath///div[@class='ModalContent']"
+                        |> fun x -> x.GetPropertyAsync("textContent").Result
+                        |> string // get all the text of the modal that displays the invoice's details
                     if details_text.Contains("Numer faktury") then details_loaded <- true
                     if details_text.Contains("Numer noty") then details_loaded <- true
 
-                let modal = p.QuerySelectorAsync("xpath///div[@class='ModalContent']").Result
-                let modal_rows = modal.QuerySelectorAllAsync("xpath/./div[@class='agreementModal']/div").Result
+                let modal = querySingle p "xpath///div[@class='ModalContent']"
+                let modal_rows = queryElementAll modal "xpath/./div[@class='agreementModal']/div"
 
-                p.Keyboard.PressAsync("Escape").Wait() // press Escape so we can get details for next invoice
+                p.Keyboard.PressAsync("Escape") |> wait // press Escape so we can get details for next invoice
                 sleep 2
                 yield invoice_row_cells, modal_rows ]
 
@@ -114,10 +115,7 @@ type PGNiGClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest)
 
         goto p "https://ebok.pgnig.pl/faktury"
         sleep 2
-        let invoices = ScrapeInvoicesInternal()
-
-        invoices
-        |> List.map parseInvoiceToStrings
+        ScrapeInvoicesInternal () |> List.map parseInvoiceToStrings
 
     member this.ScrapeOverpayments() =
         goto p "https://ebok.pgnig.pl/umowy"

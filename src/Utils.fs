@@ -44,6 +44,22 @@ let gotoWithCustomTimeOut (p:IPage) url (timeoutMs:int) =
     printfn "goto %s (timeout=%i ms)" url timeoutMs
     p.GoToAsync(url, timeout=timeoutMs) |> wait
 
+let queryAll (p:IPage) xpath =
+    printfn "queryAll %s" xpath
+    p.QuerySelectorAllAsync xpath |> runSync
+
+let querySingle (p:IPage) xpath =
+    printfn "querySingle %s" xpath
+    p.QuerySelectorAsync xpath |> runSync
+
+let queryElementAll (e:IElementHandle) xpath =
+    printfn "queryAll %s" xpath
+    e.QuerySelectorAllAsync xpath |> runSync
+
+let queryElementSingle (e:IElementHandle) xpath =
+    printfn "querySingle %s" xpath
+    e.QuerySelectorAsync xpath |> runSync
+
 let getAttributeNames = fun (d:IElementHandle) -> d.EvaluateFunctionAsync<string[]>("node => Array.from(node.attributes).map(x => x.name)") |> runSync
 let getAttributeValue = fun name (d:IElementHandle) -> d.EvaluateFunctionAsync<string>($"node => node.getAttribute('{name}')") |> runSync
 let getAttributes = fun (d:IElementHandle) ->
