@@ -26,3 +26,8 @@ let c = AliorClient(env "ALIOR_USERNAME", env "ALIOR_PASSWORD", isTest=true)
 c.SignIn()
 c.Scrape(period=All)
 let p = c.GetP()
+
+
+let w = FileSystemWatcher(@"c:\Users\inwen\Downloads\", "*.csv")
+let s = w.WaitForChanged(WatcherChangeTypes.All, TimeSpan.FromSeconds 10.0)
+printfn "%s" s.Name

@@ -253,6 +253,7 @@ type AliorClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest) 
             |> Array.map (fun x -> $"""xpath///*[@id="{x}"]""")
 
         // transactions must be downloaded per product separately. If all products are selected internal transaction are messed up.
+        use w = new FileSystemWatcher(DOWNLOADS, "*.csv")
         for product in productsXpaths |> Array.truncate count do
             click p product
             sleep 2
@@ -263,8 +264,11 @@ type AliorClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest) 
             sleep 2
 
             click p "xpath///*[contains(text(),'Download')]"
-            sleep 5
-            printfn "File should be ready in \"Downloads\" folder"
+            // watch for WatcherChangeTypes.All because the file is initially created as a temporary file
+            // and when the downloading is finished it is renamed to its final name
+            // this rename triggers the watcher because the new name ends with a .csv
+            let s = w.WaitForChanged(WatcherChangeTypes.All, TimeSpan.FromSeconds 10.0)
+            printfn "File downloaded: %s" s.Name
 
             click p productDropDown
             sleep 2
