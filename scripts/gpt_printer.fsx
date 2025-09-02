@@ -1,4 +1,4 @@
-#r "nuget: PuppeteerSharp"
+#r "nuget: PuppeteerSharp, 20.2.2"
 
 open System
 open System.Text
