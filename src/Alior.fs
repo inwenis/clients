@@ -8,7 +8,8 @@ open System.Text
 open FSharp.Data
 
 
-type Transfers = CsvProvider<"""FromAccount,ReceiverName,ReceiverAccount,TransferText,Amount,InsertedDateTime,Status,Type
+type Transfers =
+    CsvProvider<"""FromAccount,ReceiverName,ReceiverAccount,TransferText,Amount,InsertedDateTime,Status,Type
 Billing account name is long to align      ,Receiver1   ,12 1234 1234 12,Title of tra, 58.00,2023-03-01T00:00:00.0000000+02:00,ToBeExecuted,Regular
 Billing account name is long to align      ,Receiver3   ,12 1234 1234 12,Title of tra, 12.52,2023-03-01T00:00:00.0000000+02:00,ToBeExecuted,Regular
 Billing account name is long to align      ,Receiver2   ,12 1234 1234 12,Title of tra, 27.95,2023-03-01T00:00:00.0000000+02:00,Executed,Tax
@@ -18,9 +19,9 @@ Billing account name is long to align      ,Receiver2   ,12 1234 1234 12,Title o
 let ALIOR_ENCODING = CodePagesEncodingProvider.Instance.GetEncoding 1250
 
 type ScrapePeriod =
-| LastYear
-| All
-| OtherRange of DateOnly * DateOnly
+    | LastYear
+    | All
+    | OtherRange of DateOnly * DateOnly
 
 let HOME = Environment.GetFolderPath Environment.SpecialFolder.UserProfile
 let DOWNLOADS = Path.Combine(HOME, "Downloads") // puppeteer downloads files to this folder
@@ -33,32 +34,32 @@ let DEFAULT_DESTINATION = DOWNLOADS
 /// <param name="page"></param>
 /// <param name="isSignedIn"></param>
 /// <param name="isTest">defaults to 'true' to avoid accidentally sending executing transfers</param>
-type AliorClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest) =
+type AliorClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest) =
     let isTest = isTest |> Option.defaultValue true
+
     let p, isSignedIn =
         match page, isSignedIn with
-        | Some p, Some s     -> p, s
-        | Some p, None       -> p, true
-        | None,   Some false -> null, false
-        | None,   Some true  -> failwith "You can not be signed in if you don't give me a page"
-        | None,   None       -> null, false
+        | Some p, Some s   -> p, s
+        | Some p, None     -> p, true
+        | None, Some false -> null, false
+        | None, Some true  -> failwith "You can not be signed in if you don't give me a page"
+        | None, None       -> null, false
 
     let args =
         match args with
         | Some a -> a
-        | None -> [|
-            "--lang=en-GB" // many xpaths depend on English texts, this arg ensures the browser is launched in English
-            // the default window run on my laptop is too small to display the whole menu
-            // instead of supporting "hidden" menu we just "zoom out" by setting this arg
-            "--force-device-scale-factor=0.5"
-        |]
+        | None ->
+            [| "--lang=en-GB" // many xpaths depend on English texts, this arg ensures the browser is launched in English
+               // the default window run on my laptop is too small to display the whole menu
+               // instead of supporting "hidden" menu we just "zoom out" by setting this arg
+               "--force-device-scale-factor=0.5" |]
 
     let mutable signedIn = isSignedIn
-    let mutable p : IPage = p
+    let mutable p: IPage = p
 
     do downloadDefaultBrowser ()
 
-    let signInInternal() =
+    let signInInternal () =
         gotoWithCustomTimeOut p "https://system.aliorbank.pl/sign-in" (60 * 1000)
         typet p "xpath///input[@id='login']" (username ())
         click p "xpath///button[@title='Next']"
@@ -72,14 +73,16 @@ type AliorClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest)
     member this.SignIn() =
         if p = null then
             p <- getPage args
+
         if signedIn |> not then
-            signInInternal()
+            signInInternal ()
 
     member private this.OpenNewPayment() =
         this.SignIn()
         // scrolling up by any amount (-1px in this case) makes the top menu appear (if it's hidden)
         p.EvaluateExpressionAsync("window.scrollBy(0, -1)") |> wait
         sleep 2
+
         try
             // go to Dashboard (aka. home page) first, if you're already on "Payments page" you can't click "New payment"
             click p "xpath///*[contains(text(),'Dashboard')]"
@@ -87,8 +90,7 @@ type AliorClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest)
             click p "xpath///*[contains(text(),'Payments')]"
             sleep 1 // need to sleep otherwise the New Payment won't work
             click p "xpath///*[contains(text(),'New payment')]"
-        with
-        | e ->
+        with e ->
             // on my laptop when the screen is too small the top menu is hidden and I need to first click 'Menu'
             click p "xpath///*[contains(text(),'Menu')]"
             sleep 1
@@ -98,17 +100,17 @@ type AliorClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest)
             sleep 1
             click p "xpath///*[contains(text(), 'New payment')]"
 
-    member this.TransferRegular(transfer:Transfers.Row) =
+    member this.TransferRegular(transfer: Transfers.Row) =
         this.SignIn()
         this.OpenNewPayment()
         sleep 2 // if I don't wait before clicking the drop down it will not expand
         click p "xpath///accounts-select"
         let accountsDropdown = waitSelector p "xpath///accounts-select"
         clickSelector $"xpath/(.//*[contains(text(), '{transfer.FromAccount}')])[last()]" accountsDropdown
-        transfer.ReceiverName     |> typet p "xpath///*[@id='destination.name']"
-        transfer.ReceiverAccount  |> typet p "xpath///*[@id='account_number']"
-        transfer.Amount |> string |> typet p "xpath///*[@id='amount.value']"
-        transfer.TransferText     |> typet p "xpath///*[@id='title']"
+        typet p "xpath///*[@id='destination.name']"    transfer.ReceiverName
+        typet p "xpath///*[@id='account_number']"      transfer.ReceiverAccount
+        typet p "xpath///*[@id='amount.value']"       (transfer.Amount |> string)
+        typet p "xpath///*[@id='title']"               transfer.TransferText
 
         if isTest |> not then
             sleep 2 // we need to wait otherwise we can't click 'Next'
@@ -117,16 +119,22 @@ type AliorClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest)
 
             // internal transfers are confirmed with a button automatically
             // external transfers are confirmed with a phone by the user manually
-            let confirmInternalTransferButton = queryFirst p "xpath///*[contains(text(),'Confirm')]"
-            if confirmInternalTransferButton <> null then clickElement confirmInternalTransferButton
+            let confirmInternalTransferButton =
+                queryFirst p "xpath///*[contains(text(),'Confirm')]"
 
-            waitSelector p "xpath///*[contains(text(),'Domestic transfer submitted.')]" |> ignore
+            if confirmInternalTransferButton <> null then
+                clickElement confirmInternalTransferButton
+
+            waitSelector p "xpath///*[contains(text(),'Domestic transfer submitted.')]"
+            |> ignore
+
             sleep 2
         else
             printfn "Test mode - not sending the transfer"
 
-    member this.TransferTax(transfer:Transfers.Row, taxOfficeName) =
+    member this.TransferTax(transfer: Transfers.Row, taxOfficeName) =
         this.SignIn()
+
         let year, month =
             let split = transfer.TransferText.Split("/")
             split.[0], split.[1]
@@ -138,7 +146,7 @@ type AliorClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest)
 
         let fromAccountDropDown = waitSelector p "xpath///accounts-select"
         clickElement fromAccountDropDown
-        fromAccountDropDown |> clickSelector $"xpath/(.//*[contains(text(), '{transfer.FromAccount}')])[last()]"
+        clickSelector $"xpath/(.//*[contains(text(), '{transfer.FromAccount}')])[last()]" fromAccountDropDown
 
         typet p "xpath///*[@id='form-symbol']" "PPE"
         sleep 2 // wait for the drop-down to appear, otherwise we will click it too early and it won't work
@@ -152,7 +160,9 @@ type AliorClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest)
         typet p "xpath///*[@id='amount.value']" (transfer.Amount |> string)
         sleep 1
 
-        let periodDropDown = queryFirst p "xpath///custom-select[@class='obligation-period-dropdown']"
+        let periodDropDown =
+            queryFirst p "xpath///custom-select[@class='obligation-period-dropdown']"
+
         clickElement periodDropDown
         sleep 1
         clickSelector $"xpath/(.//*[contains(text(), 'Month')])[last()]" periodDropDown
@@ -161,12 +171,15 @@ type AliorClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest)
 
         let e = waitSelector p "xpath///*[@id='obligation_year']"
         // press backspace 4 times to remove year that is there by default
-        for _ in [1..4] do
+        for _ in [ 1..4 ] do
             e.PressAsync("Backspace") |> wait
+
         e.TypeAsync(year) |> wait
         sleep 1
 
-        let monthPeriodDropDown = queryFirst p "xpath/(//custom-select[@class='obligation-period-dropdown'])[last()]"
+        let monthPeriodDropDown =
+            queryFirst p "xpath/(//custom-select[@class='obligation-period-dropdown'])[last()]"
+
         clickElement monthPeriodDropDown
         sleep 1
         clickSelector $"xpath/(.//*[contains(text(), '{month}')])[last()]" monthPeriodDropDown
@@ -182,12 +195,14 @@ type AliorClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest)
 
     member this.Scrape(?destination, ?period, ?count) =
         let dest = destination |> Option.defaultValue DEFAULT_DESTINATION
+
         let period =
             match period with
             // we can't download transactions using the option 'All' but we can use 'Other range' with a wide range
             | Some All -> OtherRange(DateOnly.Parse("01.01.1990"), DateTime.Today |> DateOnly.FromDateTime)
             | Some x -> x
             | None -> LastYear
+
         let count =
             match count with
             | Some x -> x
@@ -208,17 +223,16 @@ type AliorClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest)
 
         match period with
         | LastYear -> click p """xpath///*[@id="option_time_LAST_YEAR"]"""
-        | OtherRange (from, _to) ->
+        | OtherRange(from, _to) ->
             click p """xpath///*[@id="option_time_OTHER_RANGE"]"""
             // We need to type something first, otherwise the actual date won't be typed hence we type "0".
             // When setting dates with `document.querySelector("input[#date-from").value = '...' the form claims dates are invalid.
             // The format of dates depends on Windows's ShortDate format - hence we use .ToShortDateString() and remove all non-digit characters.
             typeSlow p "xpath///input[@id='date-from']" "0"
-            typeSlow p "xpath///input[@id='date-from']" (from.ToShortDateString() |> regexRemove "\D" )
+            typeSlow p "xpath///input[@id='date-from']" (from.ToShortDateString() |> regexRemove "\D")
             typeSlow p "xpath///input[@id='date-to']" "0"
             typeSlow p "xpath///input[@id='date-to']" (_to.ToShortDateString() |> regexRemove "\D")
-        | _ ->
-            failwith "Not implemented"
+        | _ -> failwith "Not implemented"
 
         // click File type
         click p "xpath///div[@id='list_document_type']/parent::div/parent::div"
@@ -259,8 +273,9 @@ type AliorClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest)
 
         Directory.EnumerateFiles(DOWNLOADS, "*.csv")
         |> List.ofSeq
-        |> List.map              (fun x -> new FileInfo(x))
-        |> List.filter           (fun x -> DateTimeOffset.UtcNow - DateTimeOffset(x.CreationTimeUtc) < TimeSpan.FromMinutes(minutes=5))
+        |> List.map (fun x -> new FileInfo(x))
+        |> List.filter (fun x ->
+            DateTimeOffset.UtcNow - DateTimeOffset(x.CreationTimeUtc) < TimeSpan.FromMinutes(minutes = 5))
         |> List.sortByDescending (fun x -> x.CreationTimeUtc)
         |> List.map (fun x ->
             let destFullName = Path.Combine(dest, x.Name)
