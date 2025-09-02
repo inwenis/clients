@@ -1,3 +1,11 @@
+#load "c:/git/prelude/prelude.fsx"
+
+Prelude.WorkingDirectorySetter.SetToMe()
+
+open System
+
+// --- header --- //
+
 #r "nuget: FSharp.Data, 6.4.0"
 #r "nuget: PuppeteerSharp, 20.2.2"
 
