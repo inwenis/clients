@@ -15,7 +15,6 @@ Billing account name is long to align      ,Receiver2   ,12 1234 1234 12,Title o
 """>
 
 
-
 let ALIOR_ENCODING = CodePagesEncodingProvider.Instance.GetEncoding 1250
 
 type ScrapePeriod =
@@ -66,7 +65,7 @@ type AliorClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest)
         typet p "xpath///input[@id='password']" (password ())
         click p "xpath///button[@id='password-submit']"
         click p "xpath///button[contains(text(),'One-time access')]"
-        p.WaitForSelectorAsync("xpath///*[contains(text(),'My wallet')]") |> wait // we wait for the main page to load after logging in
+        waitSelector p "xpath///*[contains(text(),'My wallet')]" |> ignore // we wait for the main page to load after logging in
         sleep 2
         signedIn <- true
 
@@ -104,7 +103,7 @@ type AliorClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest)
         this.OpenNewPayment()
         sleep 2 // if I don't wait before clicking the drop down it will not expand
         click p "xpath///accounts-select"
-        let accountsDropdown = p.WaitForSelectorAsync("xpath///accounts-select") |> runSync
+        let accountsDropdown = waitSelector p "xpath///accounts-select"
         clickSelector $"xpath/(.//*[contains(text(), '{transfer.FromAccount}')])[last()]" accountsDropdown
         transfer.ReceiverName     |> typet p "xpath///*[@id='destination.name']"
         transfer.ReceiverAccount  |> typet p "xpath///*[@id='account_number']"
@@ -118,10 +117,10 @@ type AliorClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest)
 
             // internal transfers are confirmed with a button automatically
             // external transfers are confirmed with a phone by the user manually
-            let confirmInternalTransferButton = p.QuerySelectorAsync "xpath///*[contains(text(),'Confirm')]" |> runSync
+            let confirmInternalTransferButton = queryFirst p "xpath///*[contains(text(),'Confirm')]"
             if confirmInternalTransferButton <> null then clickElement confirmInternalTransferButton
 
-            p.WaitForSelectorAsync("xpath///*[contains(text(),'Domestic transfer submitted.')]") |> runSync |> ignore
+            waitSelector p "xpath///*[contains(text(),'Domestic transfer submitted.')]" |> ignore
             sleep 2
         else
             printfn "Test mode - not sending the transfer"
@@ -137,7 +136,7 @@ type AliorClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest)
         click p "xpath///*[contains(text(),'Tax transfer')]"
         sleep 2
 
-        let fromAccountDropDown = p.WaitForSelectorAsync("xpath///accounts-select") |> runSync
+        let fromAccountDropDown = waitSelector p "xpath///accounts-select"
         clickElement fromAccountDropDown
         fromAccountDropDown |> clickSelector $"xpath/(.//*[contains(text(), '{transfer.FromAccount}')])[last()]"
 
@@ -154,15 +153,15 @@ type AliorClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest)
         sleep 1
 
 
-        let periodDropDown = p.QuerySelectorAllAsync("xpath///custom-select[@class='obligation-period-dropdown']") |> runSync |> Array.head
+        let periodDropDown = queryFirst p "xpath///custom-select[@class='obligation-period-dropdown']"
         clickElement periodDropDown
         sleep 1
         clickSelector $"xpath/(.//*[contains(text(), 'Month')])[last()]" periodDropDown
         sleep 1
         // after selecting 'Month' the "Select month" drop-down appears
-        let monthPeriodDropDown = p.QuerySelectorAsync("xpath/(//custom-select[@class='obligation-period-dropdown'])[last()]") |> runSync
+        let monthPeriodDropDown = queryFirst p "xpath/(//custom-select[@class='obligation-period-dropdown'])[last()]"
 
-        let e = p.WaitForSelectorAsync("xpath///*[@id='obligation_year']") |> runSync
+        let e = waitSelector p "xpath///*[@id='obligation_year']"
         // press backspace 4 times to remove year that is there by default
         for _ in [1..4] do
             e.PressAsync("Backspace") |> wait
@@ -176,7 +175,7 @@ type AliorClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest)
             sleep 2 // we need to wait otherwise we can't click 'Next'
             click p "xpath///button/*[contains(text(),'Next')]"
             // confirm/discard with phone here
-            p.WaitForSelectorAsync("xpath///*[contains(text(),'Tax transfer sent')]") |> wait
+            waitSelector p "xpath///*[contains(text(),'Tax transfer sent')]" |> ignore
             sleep 2
         else
             printfn "Test mode - not sending the transfer"
@@ -231,18 +230,16 @@ type AliorClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest)
         let productDropDown = "xpath///div[@id='list_product']/parent::div/parent::div"
         click p productDropDown
         sleep 2
-        let products = p.QuerySelectorAllAsync("xpath///*[contains(@id,'option_product')]") |> runSync
 
         // products must be accessed by xpaths because the DOM nodes are recreated with every opening of the "Product" drop-down
         let productsXpaths =
-            products
-            |> List.ofArray
-            |> List.map getAttributes
-            |> List.map (fun x -> x.["id"])
-            |> List.map (fun x -> $"""xpath///*[@id="{x}"]""")
+            queryAll p "xpath///*[contains(@id,'option_product')]"
+            |> Array.map getAttributes
+            |> Array.map (fun x -> x.["id"])
+            |> Array.map (fun x -> $"""xpath///*[@id="{x}"]""")
 
         // transactions must be downloaded per product separately. If all products are selected internal transaction are messed up.
-        for product in productsXpaths |> List.truncate count do
+        for product in productsXpaths |> Array.truncate count do
             click p product
             sleep 2
             click p productDropDown // close drop-down
@@ -257,7 +254,7 @@ type AliorClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest)
 
             click p productDropDown
             sleep 2
-            click p product  // deselect current product
+            click p product // deselect current product
             sleep 2
 
         Directory.EnumerateFiles(DOWNLOADS, "*.csv")

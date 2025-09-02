@@ -1,7 +1,6 @@
 module Energa
 
 open System
-open System.IO
 open PuppeteerSharp
 open Utils
 
@@ -26,8 +25,8 @@ type EnergaClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest
         let w = p.WaitForNetworkIdleAsync()
         goto p "https://www.24.energa.pl/"
         w |> wait
-        username() |> typet p "xpath///input[@name='username']"
-        password() |> typet p "xpath///input[@name='password']"
+        typet p "xpath///input[@name='username']" (username())
+        typet p "xpath///input[@name='password']" (password())
         let w = p.WaitForNetworkIdleAsync()
         click p "xpath///button[@name='login']"
         w |> wait
@@ -41,7 +40,6 @@ type EnergaClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest
 
     member this.SubmitIndication(accountName, indication) =
         goto p "https://24.energa.pl/ss/select-invoice-profile"
-
         waitTillHTMLRendered p
 
         let w = p.WaitForNavigationAsync()
@@ -55,20 +53,16 @@ type EnergaClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest
             typet p "xpath///input[@name='value1']" $"{indication}"
             let w = p.WaitForNavigationAsync()
             click p "xpath///button[contains(text(),'Sprawdź')]"
-
             w |> wait
+
             waitTillHTMLRendered p
 
             printfn "dumping page in case extraction fails"
-            let content = p.GetContentAsync().Result
-            let tempFilePath = System.IO.Path.GetTempFileName()
-            System.IO.File.WriteAllText(tempFilePath, content)
-            printfn "dumped content to %A" tempFilePath
+            let filePath = dumpPage p
+            printfn "dumped content to %A" filePath
 
             printfn "extracting amount"
-            let amountText =
-                let node = p.WaitForSelectorAsync("xpath///*[contains(text(), 'Kwota do zapłaty')]").Result
-                getText node
+            let amountText = queryFirst p "xpath///*[contains(text(), 'Kwota do zapłaty')]" |> getText
             let amount =
                 amountText
                 |> regexRemove "JSHandle:Kwota do zapłaty:"
@@ -79,7 +73,7 @@ type EnergaClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest
             click p "xpath///button[contains(text(),'Zatwierdź')]"
             try
                 printfn "Waiting for 'Gratulacje' to appear"
-                p.WaitForSelectorAsync("xpath///*[contains(text(), 'Gratulacje')]") |> wait
+                waitSelector p "xpath///*[contains(text(), 'Gratulacje')]" |> ignore
                 printfn "Clicking 'powrót'"
                 click p "xpath///button[contains(text(),'powrót')]"
             with e -> printfn "%A" e

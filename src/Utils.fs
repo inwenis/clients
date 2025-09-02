@@ -6,6 +6,7 @@ open System.Threading.Tasks
 open PuppeteerSharp
 open PuppeteerSharp.Input
 open System.Text.RegularExpressions
+open System.IO
 
 
 let sleep x =
@@ -48,7 +49,7 @@ let queryAll (p:IPage) xpath =
     printfn "queryAll %s" xpath
     p.QuerySelectorAllAsync xpath |> runSync
 
-let querySingle (p:IPage) xpath =
+let queryFirst (p:IPage) xpath =
     printfn "querySingle %s" xpath
     p.QuerySelectorAsync xpath |> runSync
 
@@ -59,6 +60,10 @@ let queryElementAll (e:IElementHandle) xpath =
 let queryElementSingle (e:IElementHandle) xpath =
     printfn "querySingle %s" xpath
     e.QuerySelectorAsync xpath |> runSync
+
+let waitSelector (p:IPage) xpath =
+    printfn "waitSelector %s" xpath
+    p.WaitForSelectorAsync(xpath) |> runSync
 
 let getText (e:IElementHandle) =
     e.GetPropertyAsync("textContent").Result |> string
@@ -124,3 +129,9 @@ let getPage args =
     let opt = new LaunchOptions(Headless = false, DefaultViewport = ViewPortOptions(), Args = args)
     let brw = Puppeteer.LaunchAsync opt |> runSync
     brw.PagesAsync() |> runSync |> Array.exactlyOne
+
+let dumpPage (p:IPage) =
+    let tempFilePath = Path.GetTempFileName()
+    let content = p.GetContentAsync() |> runSync
+    File.WriteAllText(tempFilePath, content)
+    tempFilePath

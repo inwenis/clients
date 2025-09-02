@@ -61,7 +61,7 @@ type PGNiGClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest)
                 // some invoices take long to load
                 waitTillHTMLRendered p
 
-                let modal = querySingle p "xpath///div[@class='ModalContent']"
+                let modal = queryFirst p "xpath///div[@class='ModalContent']"
                 let modal_rows = queryElementAll modal "xpath/./div[@class='agreementModal']/div"
 
                 p.Keyboard.PressAsync("Escape") |> wait // press Escape so we can get details for next invoice
