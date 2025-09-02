@@ -101,7 +101,7 @@ type PGNiGClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest)
 
     member this.ScrapeInvoices() =
         let getAllTexts (x:IElementHandle) =
-            x.QuerySelectorAllAsync("xpath/.//text()").Result
+            queryElementAll x "xpath/.//text()"
             |> Array.map (fun x -> x.GetPropertyAsync("textContent").Result.JsonValueAsync().Result |> string)
             |> List.ofArray
 
@@ -125,12 +125,12 @@ type PGNiGClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest)
         goto p "https://ebok.pgnig.pl/umowy"
         sleep 2
 
-        let rows = p.QuerySelectorAllAsync("xpath///div[contains(@class,'table-row')]").Result
+        let rows = queryAll p "xpath///div[contains(@class,'table-row')]"
 
         rows
         |> List.ofArray
         |> List.map (fun row ->
-            row.QuerySelectorAllAsync("xpath/.//div[contains(@class,'columns')]").Result
+            queryElementAll row "xpath/.//div[contains(@class,'columns')]"
             |> List.ofArray
             |> List.map (fun cell -> cell.EvaluateFunctionAsync<string>("el => el.textContent").Result)
             |> List.map (fun x -> x.Trim())
