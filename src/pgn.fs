@@ -59,16 +59,7 @@ type PGNiGClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest)
                 clickSelector "xpath/.//i[contains(@class,'icon-zoom')]" invoice_row // click the magnifier to show details of the invoice
 
                 // some invoices take long to load
-                let mutable details_loaded = false
-                while details_loaded |> not do
-                    // wait to avoid busy waiting
-                    // wait before the first check as querying for the modal immediately after clicking the magnifier will return null
-                    sleep 1
-                    let details_text =
-                        querySingle p "xpath///div[@class='ModalContent']"
-                        |> getText // get all the text of the modal that displays the invoice's details
-                    if details_text.Contains("Numer faktury") then details_loaded <- true
-                    if details_text.Contains("Numer noty") then details_loaded <- true
+                waitTillHTMLRendered p
 
                 let modal = querySingle p "xpath///div[@class='ModalContent']"
                 let modal_rows = queryElementAll modal "xpath/./div[@class='agreementModal']/div"
