@@ -104,8 +104,9 @@ type AliorClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest) 
         this.SignIn()
         this.OpenNewPayment()
         sleep 2 // if I don't wait before clicking the drop down it will not expand
-        click p "xpath///accounts-select"
-        let accountsDropdown = waitSelector p "xpath///accounts-select"
+        let accountsDropdown = queryFirst p "xpath///accounts-select"
+        clickElement accountsDropdown
+        sleep 1 // we need to wait before selecting the account otherwise we get a "node detached" error
         clickSelector $"xpath/(.//*[contains(text(), '{transfer.FromAccount}')])[last()]" accountsDropdown
         typet p "xpath///*[@id='destination.name']"    transfer.ReceiverName
         typet p "xpath///*[@id='account_number']"      transfer.ReceiverAccount
