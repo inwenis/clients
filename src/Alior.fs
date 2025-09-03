@@ -103,7 +103,7 @@ type AliorClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest) 
     member this.TransferRegular(transfer: Transfers.Row) =
         this.SignIn()
         this.OpenNewPayment()
-        sleep 2 // if I don't wait before clicking the drop down it will not expand
+        sleep 2 // if I don't wait before clicking the drop down does not expand
         let accountsDropdown = queryFirst p "xpath///accounts-select"
         clickElement accountsDropdown
         sleep 1 // we need to wait before selecting the account otherwise we get a "node detached" error
