@@ -12,8 +12,8 @@ open Alior
 let testAlior () =
     let c = AliorClient(env "ALIOR_USERNAME", env "ALIOR_PASSWORD", isTest=true)
 
-    let dummyTaxTransfer = Transfers.Row("", "asdf", "84101000712221000000000000", "2024/April", 123M, DateTimeOffset.UtcNow, "asdf", "asdf")
-    let dummyRegTransfer = Transfers.Row("", "asdf", "91113000070080239435200002", "asdf", 1M, DateTimeOffset.UtcNow, "asdf", "asdf")
+    let dummyTaxTransfer = Transfers.Row("",    "asdf", "84101000712221000000000000", "2024/April", 123M, DateTimeOffset.UtcNow, "asdf", "asdf")
+    let dummyRegTransfer = Transfers.Row("uni", "asdf", "91113000070080239435200002", "asdf", 1M, DateTimeOffset.UtcNow, "asdf", "asdf")
 
     c.SignIn()
     c.Scrape(count=1) |> ignore
