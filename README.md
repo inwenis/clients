@@ -13,3 +13,5 @@ The clients are meant to be referenced via paket's [GitHub dependencies](https:/
 - add F# example
 - add example using https://fsprojects.github.io/Paket/fsi-integration.html
 - close clients when done, maybe implement IDisposable?
+- make up your mind if you want to use wait for selector or query selector
+- add error handling in helpers functions
