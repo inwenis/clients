@@ -15,3 +15,5 @@ The clients are meant to be referenced via paket's [GitHub dependencies](https:/
 - close clients when done, maybe implement IDisposable?
 - make up your mind if you want to use wait for selector or query selector
 - add error handling in helpers functions
+- getP only returns something after you're signed in
+- args are irrelevant in clients when page is given
