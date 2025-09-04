@@ -99,7 +99,7 @@ let waitTillHTMLRendered (page:IPage) =
         let html = page.GetContentAsync().Result
         let currentHTMLSize = html.Length
 
-        printfn "lstHTMLSize: %d <> currentHTMLSize: %d" lastHTMLSize currentHTMLSize
+        printfn "lastHTMLSize?=currentHTMLSize %d ?= %d" lastHTMLSize currentHTMLSize
 
         if lastHTMLSize <> 0 && currentHTMLSize = lastHTMLSize then
             countStableSizeIterations <- countStableSizeIterations + 1
