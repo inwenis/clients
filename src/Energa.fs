@@ -3,7 +3,13 @@ module Energa
 open System
 open PuppeteerSharp
 open Utils
-
+open System.IO
+open System.IO
+open System.Text
+open System.Threading.Tasks
+open PuppeteerSharp
+open System.Text.Json.Nodes
+open System.Text.Json
 
 type EnergaClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest) =
     let isTest = isTest |> Option.defaultValue true
@@ -32,11 +38,22 @@ type EnergaClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest
         w |> wait
         signedIn <- true
 
+    let saveAsMhtmlStj (page: IPage) = task {
+        let! client = page.Target.CreateCDPSessionAsync()
+        let! raw = client.SendAsync("Page.captureSnapshot", {| format = "mhtml" |})
+        // Avoid referencing Newtonsoft types by treating the result as obj → JSON string
+        let json = raw.ToString()
+        use doc = JsonDocument.Parse(json)
+        let mhtml = doc.RootElement.GetProperty("data").GetString()
+        do! File.WriteAllTextAsync("page.mhtml", mhtml, Encoding.UTF8)
+    }
+
     member this.SignIn() =
         if p = null then
             p <- getPage args
         if signedIn |> not then
             signInInternal()
+        saveAsMhtmlStj p |> wait
 
     member this.SubmitIndication(accountName, indication) =
         goto p "https://24.energa.pl/ss/select-invoice-profile"
