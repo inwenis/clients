@@ -28,7 +28,7 @@ type EnergaClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest
     do downloadDefaultBrowser ()
 
     let dumpMhtml (page: IPage) = task {
-        let! client = page.Target.CreateCDPSessionAsync()
+        let! client = page.CreateCDPSessionAsync()
         let! raw = client.SendAsync("Page.captureSnapshot", {| format = "mhtml" |})
         // Avoid referencing Newtonsoft types by treating the result as obj → JSON string
         let json = raw.ToString()
