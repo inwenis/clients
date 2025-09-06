@@ -1,6 +1,6 @@
 #load "C:/git/prelude/prelude.fsx"
 
-#r "nuget: FSharp.Data, 6.4.0"
+#r "nuget: FSharp.Data, 6.6"
 #r "nuget: PuppeteerSharp, 20.2.2"
 
 #load "../src/Utils.fs"
