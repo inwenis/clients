@@ -6,6 +6,9 @@
   - Reads paket.lock and builds a package->version map for the NUGET sections.
   - Scans all .fsx files for lines like: #r "nuget: FSharp.Data, 6.3.0"
   - Emits warnings on mismatches and suggestions when version is missing.
+  - ensures the below issues are avoided
+    - https://youtrack.jetbrains.com/issue/RIDER-127413
+    - https://github.com/dotnet/fsharp/issues/11135
 #>
 
 Set-StrictMode -Version Latest
