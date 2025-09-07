@@ -25,11 +25,13 @@ type EnergaClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest
         let w = p.WaitForNetworkIdleAsync()
         goto p "https://www.24.energa.pl/"
         w |> wait
+        dumpSnapshot p
         typet p "xpath///input[@name='username']" (username())
         typet p "xpath///input[@name='password']" (password())
         let w = p.WaitForNetworkIdleAsync()
         click p "xpath///button[@name='login']"
         w |> wait
+        dumpSnapshot p
         signedIn <- true
 
     member this.SignIn() =
@@ -41,6 +43,7 @@ type EnergaClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest
     member this.SubmitIndication(accountName, indication) =
         goto p "https://24.energa.pl/ss/select-invoice-profile"
         waitTillHTMLRendered p
+        dumpSnapshot p
 
         let w = p.WaitForNavigationAsync()
         click p $"xpath///label[contains(text(),'{accountName}')]"
@@ -48,6 +51,7 @@ type EnergaClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest
         // we need to wait for the new page to load before we can continue
         w |> wait
         waitTillHTMLRendered p
+        dumpSnapshot p
 
         if isTest |> not then
             typet p "xpath///input[@name='value1']" $"{indication}"
@@ -56,10 +60,7 @@ type EnergaClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest
             w |> wait
 
             waitTillHTMLRendered p
-
-            printfn "dumping page in case extraction fails"
-            let filePath = dumpPage p
-            printfn "dumped content to %A" filePath
+            dumpSnapshot p
 
             printfn "extracting amount"
             let amountText = queryFirst p "xpath///*[contains(text(), 'Kwota do zapłaty')]" |> getText
@@ -77,9 +78,11 @@ type EnergaClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest
                 printfn "Clicking 'powrót'"
                 click p "xpath///button[contains(text(),'powrót')]"
             with e -> printfn "%A" e
+            dumpSnapshot p
             amount
         else
             printfn "Skipping indication submission in test mode"
+            dumpSnapshot p
             Decimal.MinValue // return a value indicating no submission occurred
 
     member this.GetP() = p

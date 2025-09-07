@@ -1,6 +1,8 @@
 module Utils
 
 open System
+open System.Text
+open System.Text.Json
 open System.Threading
 open System.Threading.Tasks
 open PuppeteerSharp
@@ -130,8 +132,13 @@ let getPage args =
     let brw = Puppeteer.LaunchAsync opt |> runSync
     brw.PagesAsync() |> runSync |> Array.exactlyOne
 
-let dumpPage (p:IPage) =
-    let tempFilePath = Path.GetTempFileName()
-    let content = p.GetContentAsync() |> runSync
-    File.WriteAllText(tempFilePath, content)
-    tempFilePath
+let dumpSnapshot (page: IPage) =
+    let timestamp = DateTime.Now.ToString("O").Replace(":", "_")
+    Directory.CreateDirectory "snapshots" |> ignore
+    let path = $"snapshots/page_{timestamp}.mhtml"
+
+    let client = page.CreateCDPSessionAsync() |> runSync
+    let raw = client.SendAsync("Page.captureSnapshot", {| format = "mhtml" |}) |> runSync
+    let content = raw.Value.GetProperty "data" |> string
+    File.WriteAllText(path, content, Encoding.UTF8)
+    printfn "dumped snapshot to %s" path

@@ -15,3 +15,5 @@ open Energa
 
 let c = EnergaClient(env "ENERGA_USERNAME", env "ENERGA_PASSWORD")
 c.SignIn()
+
+c.SubmitIndication("105", 1234)
