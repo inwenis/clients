@@ -138,6 +138,7 @@ let dumpSnapshot (page: IPage) =
     let path = $"snapshots/page_{timestamp}.mhtml"
 
     let client = page.CreateCDPSessionAsync() |> runSync
+    // https://chromedevtools.github.io/devtools-protocol/tot/Page/#method-captureSnapshot
     let raw = client.SendAsync("Page.captureSnapshot", {| format = "mhtml" |}) |> runSync
     let content = raw.Value.GetProperty "data" |> string
     File.WriteAllText(path, content, Encoding.UTF8)
