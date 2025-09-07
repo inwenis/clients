@@ -6,6 +6,12 @@ This repo contains clients I use to automate settling utilities.
 
 The clients are meant to be referenced via paket's [GitHub dependencies](https://fsprojects.github.io/Paket/github-dependencies.html) and used in an FSI (.fsx) environment.
 
+# Snapshots
+
+The clients occasionally save snapshots to `./snapshots/page_{timestamp}.mhtml`.
+They should be ignored in your `.gitignore`.
+They are meant for debugging if the client encounters an error, for e.x. when the page's has a different format than we expected.
+
 # TODO
 
 - consider better colorful logging - highlight xpath syntax
