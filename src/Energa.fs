@@ -3,13 +3,7 @@ module Energa
 open System
 open PuppeteerSharp
 open Utils
-open System.IO
-open System.IO
-open System.Text
-open System.Threading.Tasks
-open PuppeteerSharp
-open System.Text.Json.Nodes
-open System.Text.Json
+
 
 type EnergaClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest) =
     let isTest = isTest |> Option.defaultValue true
@@ -27,28 +21,17 @@ type EnergaClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest
 
     do downloadDefaultBrowser ()
 
-    let dumpMhtml (page: IPage) = task {
-        let! client = page.CreateCDPSessionAsync()
-        let! raw = client.SendAsync("Page.captureSnapshot", {| format = "mhtml" |})
-        // Avoid referencing Newtonsoft types by treating the result as obj → JSON string
-        let json = raw.ToString()
-        use doc = JsonDocument.Parse(json)
-        let mhtml = doc.RootElement.GetProperty("data").GetString()
-        let n = DateTime.Now.ToString("O").Replace(":", "_")
-        do! File.WriteAllTextAsync($"page_{n}.mhtml", mhtml, Encoding.UTF8)
-    }
-
     let signInInternal () =
         let w = p.WaitForNetworkIdleAsync()
         goto p "https://www.24.energa.pl/"
         w |> wait
-        dumpMhtml p |> wait
+        dumpSnapshot p
         typet p "xpath///input[@name='username']" (username())
         typet p "xpath///input[@name='password']" (password())
         let w = p.WaitForNetworkIdleAsync()
         click p "xpath///button[@name='login']"
         w |> wait
-        dumpMhtml p |> wait
+        dumpSnapshot p
         signedIn <- true
 
     member this.SignIn() =
@@ -60,7 +43,7 @@ type EnergaClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest
     member this.SubmitIndication(accountName, indication) =
         goto p "https://24.energa.pl/ss/select-invoice-profile"
         waitTillHTMLRendered p
-        dumpMhtml p |> wait
+        dumpSnapshot p
 
         let w = p.WaitForNavigationAsync()
         click p $"xpath///label[contains(text(),'{accountName}')]"
@@ -68,7 +51,7 @@ type EnergaClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest
         // we need to wait for the new page to load before we can continue
         w |> wait
         waitTillHTMLRendered p
-        dumpMhtml p |> wait
+        dumpSnapshot p
 
         if isTest |> not then
             typet p "xpath///input[@name='value1']" $"{indication}"
@@ -77,10 +60,7 @@ type EnergaClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest
             w |> wait
 
             waitTillHTMLRendered p
-
-            printfn "dumping page in case extraction fails"
-            let filePath = dumpPage p
-            printfn "dumped content to %A" filePath
+            dumpSnapshot p
 
             printfn "extracting amount"
             let amountText = queryFirst p "xpath///*[contains(text(), 'Kwota do zapłaty')]" |> getText
@@ -98,10 +78,11 @@ type EnergaClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest
                 printfn "Clicking 'powrót'"
                 click p "xpath///button[contains(text(),'powrót')]"
             with e -> printfn "%A" e
+            dumpSnapshot p
             amount
         else
             printfn "Skipping indication submission in test mode"
-            dumpMhtml p |> wait
+            dumpSnapshot p
             Decimal.MinValue // return a value indicating no submission occurred
 
     member this.GetP() = p

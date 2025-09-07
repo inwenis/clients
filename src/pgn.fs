@@ -30,16 +30,20 @@ type PGNiGClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest)
         let w = p.WaitForNetworkIdleAsync()
         goto p "https://ebok.pgnig.pl/"
         w |> wait
+        dumpSnapshot p
         click p "xpath///button[text()='Odrzuć wszystkie']"
         sleep 1
+        dumpSnapshot p
         click p "xpath///i[contains(@class,'icon-close')]"
         sleep 1
+        dumpSnapshot p
         typet p "xpath///input[@name='identificator']" (username ())
         typet p "xpath///input[@name='accessPin']" (password ())
         let w = p.WaitForNetworkIdleAsync()
         sleep 1 // I have experienced that without waiting here clicking the "submit" button has no effect
         click p "xpath///button[@type='submit']"
         w |> wait
+        dumpSnapshot p
         signedIn <- true
 
     let ScrapeInvoicesInternal () =
@@ -79,8 +83,10 @@ type PGNiGClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest)
     member this.SubmitIndication(indication) =
         goto p "https://ebok.pgnig.pl/odczyt"
         waitTillHTMLRendered p
+        dumpSnapshot p
         click p "xpath///i[contains(@class,'icon-close')]"
         sleep 1
+        dumpSnapshot p
         if isTest |> not then
             typet p "xpath///input[@id='reading-0']" (indication |> string)
             click p "xpath///button[contains(text(), 'Zapisz odczyt')]"
@@ -88,6 +94,7 @@ type PGNiGClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest)
             waitTillHTMLRendered p // make sure the input was accepted
         else
             printfn "Skipping indication submission in test mode"
+        dumpSnapshot p
 
     member this.ScrapeInvoices() =
         let getAllTexts (x:IElementHandle) = queryElementAll x "xpath/.//text()" |> Array.map getText
@@ -106,11 +113,13 @@ type PGNiGClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest)
         // we need to close the pop-up again
         click p "xpath///i[contains(@class,'icon-close')]"
         sleep 1
+        dumpSnapshot p
         ScrapeInvoicesInternal () |> List.map parseInvoiceToStrings
 
     member this.ScrapeOverpayments() =
         goto p "https://ebok.pgnig.pl/umowy"
         sleep 2
+        dumpSnapshot p
 
         let rows = queryAll p "xpath///div[contains(@class,'table-row')]"
 
