@@ -36,7 +36,7 @@ function Get-PaketLockedVersions {
 
         if ($inNuget -and ($line -match $pkgLine)) {
             $name = $Matches[1]
-            $ver  = $Matches[2]
+            $ver = $Matches[2]
 
             # paket.lock can occasionally pin multiples across groups; keep first occurrence per package name
             if (-not $versions.ContainsKey($name)) {
@@ -103,7 +103,8 @@ function Compare-FsxAgainstPaket {
     if ($warnings -eq 0) {
         Write-Host "✅ All .fsx NuGet pins match paket.lock." -ForegroundColor Green
         return 0
-    } else {
+    }
+    else {
         Write-Host "⚠️  Found $warnings issue(s). See warnings above." -ForegroundColor Yellow
         return 2
     }
