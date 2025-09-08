@@ -23,3 +23,5 @@ They are meant for debugging if the client encounters an error, for e.x. when th
 - add error handling in helpers functions
 - getP only returns something after you're signed in
 - args are irrelevant in clients when page is given
+
+- dump page on error
