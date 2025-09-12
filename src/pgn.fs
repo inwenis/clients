@@ -88,7 +88,7 @@ type PGNiGClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest) 
         goto p "https://ebok.pgnig.pl/odczyt"
         waitTillHTMLRendered p
         dumpSnapshot p
-        click p "xpath///i[contains(@class,'icon-close')]"
+        clickOrContinue p "xpath///i[contains(@class,'icon-close')]"
         sleep 1
         dumpSnapshot p
         if isTest |> not then
@@ -122,7 +122,7 @@ type PGNiGClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest) 
         sleep 2
         // because we use `goto` to navigate instead of buttons on the SPA
         // we need to close the pop-up again
-        click p "xpath///i[contains(@class,'icon-close')]"
+        clickOrContinue p "xpath///i[contains(@class,'icon-close')]"
         sleep 1
         dumpSnapshot p
         ScrapeInvoicesInternal () |> List.map parseInvoiceToStrings

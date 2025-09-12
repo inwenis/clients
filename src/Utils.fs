@@ -156,3 +156,7 @@ let dumpSnapshot (page: IPage) =
     let content = raw.Value.GetProperty "data" |> string
     File.WriteAllText(path, content, Encoding.UTF8)
     printfn "dumped snapshot to %s" path
+
+let assertNotNull x =
+    if isNull x then
+        failwith "assertNotNull failed"

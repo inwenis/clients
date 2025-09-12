@@ -58,6 +58,10 @@ type EnergaClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest)
         waitTillHTMLRendered p
         dumpSnapshot p
 
+        // there might be a page informing about upcoming power outages due to maintenance
+        clickOrContinue p "xpath///button[contains(text(),'Zapoznałem się z informacją')]"
+        waitTillHTMLRendered p
+
         if isTest |> not then
             typet p "xpath///input[@name='value1']" $"{indication}"
             let w = p.WaitForNavigationAsync()
@@ -86,6 +90,10 @@ type EnergaClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest)
             dumpSnapshot p
             amount
         else
+            // in test more we don't submit the indication, we only make sure the expected fields are present
+            queryFirst p "xpath///input[@name='value1']" |> assertNotNull
+            queryFirst p "xpath///button[contains(text(),'Sprawdź')]" |> assertNotNull
+
             printfn "Skipping indication submission in test mode"
             dumpSnapshot p
             Decimal.MinValue // return a value indicating no submission occurred
