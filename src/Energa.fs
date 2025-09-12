@@ -5,6 +5,9 @@ open PuppeteerSharp
 open Utils
 
 
+let INDICATION_INPUT = "xpath///input[@name='value1']"
+let INDICATION_SUBMIT = "xpath///button[contains(text(),'Sprawdź')]"
+
 type EnergaClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest) =
     let isTest = isTest |> Option.defaultValue true
     let p, isSignedIn =
@@ -63,9 +66,9 @@ type EnergaClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest)
         waitTillHTMLRendered p
 
         if isTest |> not then
-            typet p "xpath///input[@name='value1']" $"{indication}"
+            typet p INDICATION_INPUT $"{indication}"
             let w = p.WaitForNavigationAsync()
-            click p "xpath///button[contains(text(),'Sprawdź')]"
+            click p INDICATION_SUBMIT
             w |> wait
 
             waitTillHTMLRendered p
@@ -91,8 +94,8 @@ type EnergaClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest)
             amount
         else
             // in test more we don't submit the indication, we only make sure the expected fields are present
-            queryFirst p "xpath///input[@name='value1']" |> assertNotNull
-            queryFirst p "xpath///button[contains(text(),'Sprawdź')]" |> assertNotNull
+            queryFirst p INDICATION_INPUT |> assertNotNull
+            queryFirst p INDICATION_SUBMIT |> assertNotNull
 
             printfn "Skipping indication submission in test mode"
             dumpSnapshot p
