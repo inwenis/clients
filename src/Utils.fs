@@ -2,7 +2,6 @@ module Utils
 
 open System
 open System.Text
-open System.Text.Json
 open System.Threading
 open System.Threading.Tasks
 open PuppeteerSharp
