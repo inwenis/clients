@@ -61,9 +61,9 @@ type AliorClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest) 
 
     let signInInternal () =
         gotoWithCustomTimeOut p "https://system.aliorbank.pl/sign-in" (60 * 1000)
-        typet p "xpath///input[@id='login']" (username ())
+        typet p "xpath///input[@id='login']" <| username ()
         click p "xpath///button[@title='Next']"
-        typet p "xpath///input[@id='password']" (password ())
+        typet p "xpath///input[@id='password']" <| password ()
         click p "xpath///button[@id='password-submit']"
         click p "xpath///button[contains(text(),'One-time access')]"
         waitSelector p "xpath///*[contains(text(),'My wallet')]" |> ignore // we wait for the main page to load after logging in
@@ -138,7 +138,7 @@ type AliorClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest) 
 
     member this.TransferRegular(transfer: Transfers.Row) =
         try
-            this.TransferRegularInternal(transfer)
+            this.TransferRegularInternal transfer
         with e ->
             dumpSnapshot p
             raise e

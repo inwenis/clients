@@ -23,15 +23,15 @@ let clickElement (e:IElementHandle) = e.ClickAsync() |> wait
 
 let clickSelector xpath (e:IElementHandle) =
     printfn "click %s" xpath
-    e.WaitForSelectorAsync(xpath) |> runSync |> clickElement
+    e.WaitForSelectorAsync xpath |> runSync |> clickElement
 
 let click (p:IPage) xpath =
     printfn "click %s" xpath
-    p.WaitForSelectorAsync(xpath) |> runSync |> clickElement
+    p.WaitForSelectorAsync xpath |> runSync |> clickElement
 
 let typet (p:IPage) xpath text =
     printfn "typet %s ..." xpath
-    p.WaitForSelectorAsync(xpath) |> runSync |> fun x -> x.TypeAsync(text) |> wait
+    p.WaitForSelectorAsync xpath |> runSync |> fun x -> x.TypeAsync(text) |> wait
 
 let typeSlow (p:IPage) xpath text =
     printfn "typeSlow %s ..." xpath
@@ -65,13 +65,13 @@ let queryElementSingle (e:IElementHandle) xpath =
 
 let waitSelector (p:IPage) xpath =
     printfn "waitSelector %s" xpath
-    p.WaitForSelectorAsync(xpath) |> runSync
+    p.WaitForSelectorAsync xpath |> runSync
 
 let getText (e:IElementHandle) =
     e.GetPropertyAsync("textContent").Result |> string
 
-let getAttributeNames = fun (d:IElementHandle) -> d.EvaluateFunctionAsync<string[]>("node => Array.from(node.attributes).map(x => x.name)") |> runSync
-let getAttributeValue = fun name (d:IElementHandle) -> d.EvaluateFunctionAsync<string>($"node => node.getAttribute('{name}')") |> runSync
+let getAttributeNames = fun (d:IElementHandle) -> d.EvaluateFunctionAsync<string[]> "node => Array.from(node.attributes).map(x => x.name)" |> runSync
+let getAttributeValue = fun name (d:IElementHandle) -> d.EvaluateFunctionAsync<string> $"node => node.getAttribute('{name}')" |> runSync
 let getAttributes = fun (d:IElementHandle) ->
     let attributeNames = getAttributeNames d
     attributeNames

@@ -37,8 +37,8 @@ type PGNiGClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest)
         click p "xpath///i[contains(@class,'icon-close')]"
         sleep 1
         dumpSnapshot p
-        typet p "xpath///input[@name='identificator']" (username ())
-        typet p "xpath///input[@name='accessPin']" (password ())
+        typet p "xpath///input[@name='identificator']" <| username ()
+        typet p "xpath///input[@name='accessPin']"     <| password ()
         let w = p.WaitForNetworkIdleAsync()
         sleep 1 // I have experienced that without waiting here clicking the "submit" button has no effect
         click p "xpath///button[@type='submit']"
@@ -68,7 +68,7 @@ type PGNiGClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest)
                 let modal = queryFirst p "xpath///div[@class='ModalContent']"
                 let modal_rows = queryElementAll modal "xpath/./div[@class='agreementModal']/div"
 
-                p.Keyboard.PressAsync("Escape") |> wait // press Escape so we can get details for next invoice
+                p.Keyboard.PressAsync "Escape" |> wait // press Escape so we can get details for next invoice
                 sleep 2
                 yield invoice_row_cells, modal_rows ]
 
@@ -84,7 +84,7 @@ type PGNiGClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest)
             dumpSnapshot p
             raise e
 
-    member private this.SubmitIndicationInternal(indication) =
+    member private this.SubmitIndicationInternal indication =
         goto p "https://ebok.pgnig.pl/odczyt"
         waitTillHTMLRendered p
         dumpSnapshot p
@@ -100,9 +100,9 @@ type PGNiGClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest)
             printfn "Skipping indication submission in test mode"
         dumpSnapshot p
 
-    member this.SubmitIndication(indication) =
+    member this.SubmitIndication indication =
         try
-            this.SubmitIndicationInternal(indication)
+            this.SubmitIndicationInternal indication
         with e ->
             dumpSnapshot p
             raise e
