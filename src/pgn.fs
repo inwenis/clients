@@ -9,7 +9,7 @@ type InvoiceData = {
     AfterClickingOnInvoice: string []
 }
 
-type PGNiGClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest) =
+type PGNiGClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest) =
     let isTest = isTest |> Option.defaultValue true
     let p, isSignedIn =
         match page, isSignedIn with
@@ -22,7 +22,7 @@ type PGNiGClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest)
     let args = args |> Option.defaultValue [||]
 
     let mutable signedIn = isSignedIn
-    let mutable p : IPage = p
+    let mutable p: IPage = p
 
     do downloadDefaultBrowser ()
 
@@ -55,7 +55,7 @@ type PGNiGClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest)
                 let invoice_row =
                     queryAll p "xpath///div[contains(@class,'table-row')]"
                     |> Array.mapi (fun i x -> i, x)
-                    |> Array.find (fun (i,_) -> i = index)
+                    |> Array.find (fun (i, _) -> i = index)
                     |> snd
 
                 // the "amount to pay is only available in the table before clicking on a invoice"
@@ -79,7 +79,7 @@ type PGNiGClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest)
             if p = null then
                 p <- getPage args
             if signedIn |> not then
-                signInInternal()
+                signInInternal ()
         with e ->
             dumpSnapshot p
             raise e
@@ -108,9 +108,9 @@ type PGNiGClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest)
             raise e
 
     member private this.ScrapeInvoicesInternal() =
-        let getAllTexts (x:IElementHandle) = queryElementAll x "xpath/.//text()" |> Array.map getText
+        let getAllTexts (x: IElementHandle) = queryElementAll x "xpath/.//text()" |> Array.map getText
 
-        let parseInvoiceToStrings (before : IElementHandle array, after : IElementHandle array) =
+        let parseInvoiceToStrings (before: IElementHandle array, after: IElementHandle array) =
             let before = before |> Array.collect getAllTexts |> Array.map (fun x -> x.Trim()) |> Array.filter (fun x -> x <> "")
             let after  = after  |> Array.collect getAllTexts |> Array.map (fun x -> x.Trim()) |> Array.filter (fun x -> x <> "")
             {
@@ -146,7 +146,7 @@ type PGNiGClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest)
             queryElementAll row "xpath/.//div[contains(@class,'columns')]"
             |> Array.map getText
             |> Array.map (fun x -> x.Trim())
-            |> Array.filter (fun x -> x <> "") )
+            |> Array.filter (fun x -> x <> ""))
 
     member this.ScrapeOverpayments() =
         try

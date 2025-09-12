@@ -5,7 +5,7 @@ open PuppeteerSharp
 open Utils
 
 
-type EnergaClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest) =
+type EnergaClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest) =
     let isTest = isTest |> Option.defaultValue true
     let p, isSignedIn =
         match page, isSignedIn with
@@ -17,7 +17,7 @@ type EnergaClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest
     let args = args |> Option.defaultValue [||]
 
     let mutable signedIn = isSignedIn
-    let mutable p : IPage = p
+    let mutable p: IPage = p
 
     do downloadDefaultBrowser ()
 
@@ -26,8 +26,8 @@ type EnergaClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest
         goto p "https://www.24.energa.pl/"
         w |> wait
         dumpSnapshot p
-        typet p "xpath///input[@name='username']" (username())
-        typet p "xpath///input[@name='password']" (password())
+        typet p "xpath///input[@name='username']" <| username ()
+        typet p "xpath///input[@name='password']" <| password ()
         let w = p.WaitForNetworkIdleAsync()
         click p "xpath///button[@name='login']"
         w |> wait
@@ -38,8 +38,9 @@ type EnergaClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest
         try
             if p = null then
                 p <- getPage args
+
             if signedIn |> not then
-                signInInternal()
+                signInInternal ()
         with e ->
             dumpSnapshot p
             raise e

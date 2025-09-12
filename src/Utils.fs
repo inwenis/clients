@@ -14,59 +14,62 @@ let sleep x =
     printfn "sleep %is" x
     x |> int64 |> TimeSpan.FromSeconds |> Thread.Sleep
 
-let wait (t:Task) = t.Wait()
+let wait (t: Task) = t.Wait()
 
-let runSync (t:Task<'a>) = t.Result
+let runSync (t: Task<'a>) = t.Result
 
-let clickElement (e:IElementHandle) = e.ClickAsync() |> wait
+let clickElement (e: IElementHandle) = e.ClickAsync() |> wait
 
-let clickSelector xpath (e:IElementHandle) =
+let clickSelector xpath (e: IElementHandle) =
     printfn "click %s" xpath
     e.WaitForSelectorAsync xpath |> runSync |> clickElement
 
-let click (p:IPage) xpath =
+let click (p: IPage) xpath =
     printfn "click %s" xpath
     p.WaitForSelectorAsync xpath |> runSync |> clickElement
 
-let typet (p:IPage) xpath text =
+let typet (p: IPage) xpath text =
     printfn "typet %s ..." xpath
-    p.WaitForSelectorAsync xpath |> runSync |> fun x -> x.TypeAsync(text) |> wait
+    p.WaitForSelectorAsync xpath |> runSync |> fun x -> x.TypeAsync text |> wait
 
-let typeSlow (p:IPage) xpath text =
+let typeSlow (p: IPage) xpath text =
     printfn "typeSlow %s ..." xpath
     let options = new TypeOptions()
-    options.Delay <- TimeSpan.FromSeconds(seconds=1).TotalMilliseconds |> int
-    p.WaitForSelectorAsync(xpath) |> runSync |> fun x -> x.TypeAsync(text, options) |> wait
+    options.Delay <- TimeSpan.FromSeconds(seconds = 1).TotalMilliseconds |> int
 
-let goto (p:IPage) url =
+    p.WaitForSelectorAsync(xpath)
+    |> runSync
+    |> fun x -> x.TypeAsync(text, options) |> wait
+
+let goto (p: IPage) url =
     printfn "goto %s" url
     p.GoToAsync(url) |> wait
 
-let gotoWithCustomTimeOut (p:IPage) url (timeoutMs:int) =
+let gotoWithCustomTimeOut (p: IPage) url (timeoutMs: int) =
     printfn "goto %s (timeout=%i ms)" url timeoutMs
-    p.GoToAsync(url, timeout=timeoutMs) |> wait
+    p.GoToAsync(url, timeout = timeoutMs) |> wait
 
-let queryAll (p:IPage) xpath =
+let queryAll (p: IPage) xpath =
     printfn "queryAll %s" xpath
     p.QuerySelectorAllAsync xpath |> runSync
 
-let queryFirst (p:IPage) xpath =
+let queryFirst (p: IPage) xpath =
     printfn "querySingle %s" xpath
     p.QuerySelectorAsync xpath |> runSync
 
-let queryElementAll (e:IElementHandle) xpath =
+let queryElementAll (e: IElementHandle) xpath =
     printfn "queryAll %s" xpath
     e.QuerySelectorAllAsync xpath |> runSync
 
-let queryElementSingle (e:IElementHandle) xpath =
+let queryElementSingle (e: IElementHandle) xpath =
     printfn "querySingle %s" xpath
     e.QuerySelectorAsync xpath |> runSync
 
-let waitSelector (p:IPage) xpath =
+let waitSelector (p: IPage) xpath =
     printfn "waitSelector %s" xpath
     p.WaitForSelectorAsync xpath |> runSync
 
-let getText (e:IElementHandle) =
+let getText (e: IElementHandle) =
     e.GetPropertyAsync("textContent").Result |> string
 
 let getAttributeNames = fun (d:IElementHandle) -> d.EvaluateFunctionAsync<string[]> "node => Array.from(node.attributes).map(x => x.name)" |> runSync
@@ -85,7 +88,7 @@ let regexReplace  regex (replacement:string) text = Regex.Replace(text, regex, r
 let regexRemove   regex                      text = Regex.Replace(text, regex, String.Empty)
 
 // https://stackoverflow.com/a/61304202/2377787
-let waitTillHTMLRendered (page:IPage) =
+let waitTillHTMLRendered (page: IPage) =
     let timeout = 30000
     let checkDurationMilliseconds = 1000
     let maxChecks = timeout / checkDurationMilliseconds

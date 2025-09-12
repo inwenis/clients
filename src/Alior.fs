@@ -315,7 +315,7 @@ type AliorClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest) 
 
     member this.Scrape(?destination, ?period, ?count) =
         try
-            this.ScrapeInternal(?destination=destination, ?period=period, ?count=count)
+            this.ScrapeInternal(?destination = destination, ?period = period, ?count = count)
         with e ->
             dumpSnapshot p
             raise e
