@@ -34,7 +34,7 @@ type PGNiGClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest) 
         click p "xpath///button[text()='Odrzuć wszystkie']"
         sleep 1
         dumpSnapshot p
-        click p "xpath///i[contains(@class,'icon-close')]"
+        clickOrContinue p "xpath///i[contains(@class,'icon-close')]"
         sleep 1
         dumpSnapshot p
         typet p "xpath///input[@name='identificator']" <| username ()

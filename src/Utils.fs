@@ -28,6 +28,17 @@ let click (p: IPage) xpath =
     printfn "click p \"%s\"" xpath
     p.WaitForSelectorAsync xpath |> runSync |> clickElement
 
+let clickOrContinue (p: IPage) xpath =
+    printfn "clickOrContinue p \"%s\"" xpath
+    try
+        let op = new WaitForSelectorOptions()
+        op.Timeout <- 5000
+        p.WaitForSelectorAsync(xpath, options = op) |> runSync |> clickElement
+    with
+    // swallow all exceptions because clickOrContinue is used for example when
+    // a popup may or may not appear
+    | _ -> ()
+
 let typet (p: IPage) xpath text =
     printfn "typet p \"%s\" ..." xpath
     p.WaitForSelectorAsync xpath |> runSync |> fun x -> x.TypeAsync text |> wait
