@@ -237,12 +237,12 @@ type AliorClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest) 
         click p "xpath///*[contains(text(),'Show filters')]"
         sleep 2
         // click Period
-        click p "xpath///div[@id='list_time']/parent::div/parent::div"
+        click p "xpath///label[contains(text(),'Period')]"
 
         match period with
-        | LastYear -> click p """xpath///*[@id="option_time_LAST_YEAR"]"""
+        | LastYear -> click p "xpath///*[contains(text(),'Last year')]"
         | OtherRange(from, _to) ->
-            click p """xpath///*[@id="option_time_OTHER_RANGE"]"""
+            click p "xpath///*[contains(text(),'Other date range')]"
             // We need to type something first, otherwise the actual date won't be typed hence we type "0".
             // When setting dates with `document.querySelector("input[#date-from").value = '...' the form claims dates are invalid.
             // The format of dates depends on Windows's ShortDate format - hence we use .ToShortDateString() and remove all non-digit characters.
@@ -253,22 +253,25 @@ type AliorClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest) 
         | _ -> failwith "Not implemented"
 
         // click File type
-        click p "xpath///div[@id='list_document_type']/parent::div/parent::div"
+        click p "xpath///*[contains(text(),'File type')]"
         sleep 2
         // click csv
-        click p """xpath///*[@id="option_document_type_CSV"]"""
+        click p "xpath///*[contains(text(),'CSV')]"
         sleep 2
 
-        let productDropDown = "xpath///div[@id='list_product']/parent::div/parent::div"
+        let productDropDown = "xpath///*[contains(text(),'Product')]"
         click p productDropDown
         sleep 2
 
         // products must be accessed by xpaths because the DOM nodes are recreated with every opening of the "Product" drop-down
         let productsXpaths =
-            queryAll p "xpath///*[contains(@id,'option_product')]"
+            queryAll p "xpath///li[@role='option']"
             |> Array.map getAttributes
             |> Array.map (fun x -> x.["id"])
             |> Array.map (fun x -> $"""xpath///*[@id="{x}"]""")
+
+        if productsXpaths.Length = 0 then
+            failwith "No products found - can't download transactions"
 
         // transactions must be downloaded per product separately. If all products are selected internal transaction are messed up.
         use w = new FileSystemWatcher(DOWNLOADS, "*.csv")
