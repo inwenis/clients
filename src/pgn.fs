@@ -84,7 +84,7 @@ type PGNiGClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest)
             dumpSnapshot p
             raise e
 
-    member private this.SubmitIndication(indication) =
+    member private this.SubmitIndicationInternal(indication) =
         goto p "https://ebok.pgnig.pl/odczyt"
         waitTillHTMLRendered p
         dumpSnapshot p
@@ -102,7 +102,7 @@ type PGNiGClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest)
 
     member this.SubmitIndication(indication) =
         try
-            this.SubmitIndication(indication)
+            this.SubmitIndicationInternal(indication)
         with e ->
             dumpSnapshot p
             raise e
