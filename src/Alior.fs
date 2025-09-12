@@ -71,11 +71,14 @@ type AliorClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest) 
         signedIn <- true
 
     member this.SignIn() =
-        if p = null then
-            p <- getPage args
-
-        if signedIn |> not then
-            signInInternal ()
+        try
+            if p = null then
+                p <- getPage args
+            if signedIn |> not then
+                signInInternal ()
+        with e ->
+            dumpSnapshot p
+            raise e
 
     member private this.OpenNewPayment() =
         this.SignIn()
@@ -100,7 +103,7 @@ type AliorClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest) 
             sleep 1
             click p "xpath///*[contains(text(), 'New payment')]"
 
-    member this.TransferRegular(transfer: Transfers.Row) =
+    member private this.TransferRegularInternal(transfer: Transfers.Row) =
         this.SignIn()
         this.OpenNewPayment()
         sleep 2 // if I don't wait before clicking the drop down does not expand
@@ -133,7 +136,14 @@ type AliorClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest) 
         else
             printfn "Test mode - not sending the transfer"
 
-    member this.TransferTax(transfer: Transfers.Row, taxOfficeName) =
+    member this.TransferRegular(transfer: Transfers.Row) =
+        try
+            this.TransferRegularInternal(transfer)
+        with e ->
+            dumpSnapshot p
+            raise e
+
+    member private this.TransferTaxInternal(transfer: Transfers.Row, taxOfficeName) =
         this.SignIn()
 
         let year, month =
@@ -194,7 +204,14 @@ type AliorClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest) 
         else
             printfn "Test mode - not sending the transfer"
 
-    member this.Scrape(?destination, ?period, ?count) =
+    member this.TransferTax(transfer: Transfers.Row, taxOfficeName) =
+        try
+            this.TransferTaxInternal(transfer, taxOfficeName)
+        with e ->
+            dumpSnapshot p
+            raise e
+
+    member private this.ScrapeInternal(?destination, ?period, ?count) =
         let dest = destination |> Option.defaultValue DEFAULT_DESTINATION
 
         let period =
@@ -296,5 +313,11 @@ type AliorClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest) 
 
         destinationFiles
 
+    member this.Scrape(?destination, ?period, ?count) =
+        try
+            this.ScrapeInternal(?destination=destination, ?period=period, ?count=count)
+        with e ->
+            dumpSnapshot p
+            raise e
 
     member this.GetP() = p

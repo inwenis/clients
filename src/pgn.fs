@@ -75,12 +75,16 @@ type PGNiGClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest)
         invoices
 
     member this.SignIn() =
-        if p = null then
-            p <- getPage args
-        if signedIn |> not then
-            signInInternal()
+        try
+            if p = null then
+                p <- getPage args
+            if signedIn |> not then
+                signInInternal()
+        with e ->
+            dumpSnapshot p
+            raise e
 
-    member this.SubmitIndication(indication) =
+    member private this.SubmitIndication(indication) =
         goto p "https://ebok.pgnig.pl/odczyt"
         waitTillHTMLRendered p
         dumpSnapshot p
@@ -96,7 +100,14 @@ type PGNiGClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest)
             printfn "Skipping indication submission in test mode"
         dumpSnapshot p
 
-    member this.ScrapeInvoices() =
+    member this.SubmitIndication(indication) =
+        try
+            this.SubmitIndication(indication)
+        with e ->
+            dumpSnapshot p
+            raise e
+
+    member private this.ScrapeInvoicesInternal() =
         let getAllTexts (x:IElementHandle) = queryElementAll x "xpath/.//text()" |> Array.map getText
 
         let parseInvoiceToStrings (before : IElementHandle array, after : IElementHandle array) =
@@ -116,7 +127,14 @@ type PGNiGClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest)
         dumpSnapshot p
         ScrapeInvoicesInternal () |> List.map parseInvoiceToStrings
 
-    member this.ScrapeOverpayments() =
+    member this.ScrapeInvoices() =
+        try
+            this.ScrapeInvoicesInternal()
+        with e ->
+            dumpSnapshot p
+            raise e
+
+    member private this.ScrapeOverpaymentsInternal() =
         goto p "https://ebok.pgnig.pl/umowy"
         sleep 2
         dumpSnapshot p
@@ -129,5 +147,12 @@ type PGNiGClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest)
             |> Array.map getText
             |> Array.map (fun x -> x.Trim())
             |> Array.filter (fun x -> x <> "") )
+
+    member this.ScrapeOverpayments() =
+        try
+            this.ScrapeOverpaymentsInternal()
+        with e ->
+            dumpSnapshot p
+            raise e
 
     member this.GetP() = p

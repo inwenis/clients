@@ -35,12 +35,16 @@ type EnergaClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest
         signedIn <- true
 
     member this.SignIn() =
-        if p = null then
-            p <- getPage args
-        if signedIn |> not then
-            signInInternal()
+        try
+            if p = null then
+                p <- getPage args
+            if signedIn |> not then
+                signInInternal()
+        with e ->
+            dumpSnapshot p
+            raise e
 
-    member this.SubmitIndication(accountName, indication) =
+    member private this.SubmitIndicationInternal(accountName, indication) =
         goto p "https://24.energa.pl/ss/select-invoice-profile"
         waitTillHTMLRendered p
         dumpSnapshot p
@@ -84,5 +88,12 @@ type EnergaClient(username, password, ?args, ?page : IPage, ?isSignedIn, ?isTest
             printfn "Skipping indication submission in test mode"
             dumpSnapshot p
             Decimal.MinValue // return a value indicating no submission occurred
+
+    member this.SubmitIndication(accountName, indication) =
+        try
+            this.SubmitIndicationInternal(accountName, indication)
+        with e ->
+            dumpSnapshot p
+            raise e
 
     member this.GetP() = p
