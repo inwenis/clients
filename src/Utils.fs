@@ -21,19 +21,19 @@ let runSync (t: Task<'a>) = t.Result
 let clickElement (e: IElementHandle) = e.ClickAsync() |> wait
 
 let clickSelector xpath (e: IElementHandle) =
-    printfn "click %s" xpath
+    printfn "click \"%s\"" xpath
     e.WaitForSelectorAsync xpath |> runSync |> clickElement
 
 let click (p: IPage) xpath =
-    printfn "click %s" xpath
+    printfn "click p \"%s\"" xpath
     p.WaitForSelectorAsync xpath |> runSync |> clickElement
 
 let typet (p: IPage) xpath text =
-    printfn "typet %s ..." xpath
+    printfn "typet p \"%s\" ..." xpath
     p.WaitForSelectorAsync xpath |> runSync |> fun x -> x.TypeAsync text |> wait
 
 let typeSlow (p: IPage) xpath text =
-    printfn "typeSlow %s ..." xpath
+    printfn "typeSlow p \"%s\" ..." xpath
     let options = new TypeOptions()
     options.Delay <- TimeSpan.FromSeconds(seconds = 1).TotalMilliseconds |> int
 
@@ -42,31 +42,31 @@ let typeSlow (p: IPage) xpath text =
     |> fun x -> x.TypeAsync(text, options) |> wait
 
 let goto (p: IPage) url =
-    printfn "goto %s" url
+    printfn "goto p \"%s\"" url
     p.GoToAsync(url) |> wait
 
 let gotoWithCustomTimeOut (p: IPage) url (timeoutMs: int) =
-    printfn "goto %s (timeout=%i ms)" url timeoutMs
+    printfn "goto p \"%s\" (timeout=%i ms)" url timeoutMs
     p.GoToAsync(url, timeout = timeoutMs) |> wait
 
 let queryAll (p: IPage) xpath =
-    printfn "queryAll %s" xpath
+    printfn "queryAll \"%s\"" xpath
     p.QuerySelectorAllAsync xpath |> runSync
 
 let queryFirst (p: IPage) xpath =
-    printfn "querySingle %s" xpath
+    printfn "querySingle \"%s\"" xpath
     p.QuerySelectorAsync xpath |> runSync
 
 let queryElementAll (e: IElementHandle) xpath =
-    printfn "queryAll %s" xpath
+    printfn "queryAll \"%s\"" xpath
     e.QuerySelectorAllAsync xpath |> runSync
 
 let queryElementSingle (e: IElementHandle) xpath =
-    printfn "querySingle %s" xpath
+    printfn "querySingle \"%s\"" xpath
     e.QuerySelectorAsync xpath |> runSync
 
 let waitSelector (p: IPage) xpath =
-    printfn "waitSelector %s" xpath
+    printfn "waitSelector \"%s\"" xpath
     p.WaitForSelectorAsync xpath |> runSync
 
 let getText (e: IElementHandle) =
