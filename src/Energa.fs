@@ -29,6 +29,8 @@ type EnergaClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest)
         goto p "https://www.24.energa.pl/"
         w |> wait
         dumpSnapshot p
+        click p "xpath///span[@data-translate='Login.continueWithE24']"
+        waitTillHTMLRendered p
         typet p "xpath///input[@name='username']" <| username ()
         typet p "xpath///input[@name='password']" <| password ()
         let w = p.WaitForNetworkIdleAsync()
@@ -63,6 +65,8 @@ type EnergaClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest)
 
         // there might be a page informing about upcoming power outages due to maintenance
         clickOrContinue p "xpath///button[contains(text(),'Zapoznałem się z informacją')]"
+        // there might be a page informing about changes to the terms of service
+        clickOrContinue p "xpath///button[contains(text(),'Akceptuję regulamin')]"
         waitTillHTMLRendered p
 
         if isTest |> not then

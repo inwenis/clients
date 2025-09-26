@@ -13,7 +13,12 @@ open PuppeteerSharp
 open Utils
 open Energa
 
-let c = EnergaClient(env "ENERGA_USERNAME", env "ENERGA_PASSWORD")
+
+let c = EnergaClient(env "ENERGA_USERNAME", env "ENERGA_PASSWORD", isTest=true)
 c.SignIn()
 
 c.SubmitIndication("105", 1234)
+
+// #load "../src/Energa.fs"
+// open Energa
+// let c = EnergaClient(env "ENERGA_USERNAME", env "ENERGA_PASSWORD", isTest=true, page=c.GetP(), isSignedIn=false)
