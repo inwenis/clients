@@ -23,10 +23,15 @@ let testAlior () =
 
     printfn "if we reached this line without errors all must be good!"
 
-let testPGNIG args =
-    let c = PGNiGClient(env "PGNIG_USERNAME", env "PGNIG_PASSWORD", args=args, isTest=true)
+let testPGNIG () =
+    let c = PGNiGClient(env "PGNIG_USERNAME", env "PGNIG_PASSWORD", isTest=true)
+
     c.SignIn()
     c.SubmitIndication 123
+    c.ScrapeInvoices() |> ignore
+    c.ScrapeOverpayments() |> ignore
+
+    printfn "if we reached this line without errors all must be good!"
 
 let testEnerga () =
     let c = EnergaClient(env "ENERGA_USERNAME", env "ENERGA_PASSWORD", isTest=true)
@@ -34,22 +39,14 @@ let testEnerga () =
     let d = c.SubmitIndication("a", 123)
     printfn "Submitted indication, received response: %A" d
 
+    printfn "if we reached this line without errors all must be good!"
+
+
 [<EntryPoint>]
 let main _ =
-    let config =
-        ConfigurationBuilder()
-            .SetBasePath(AppContext.BaseDirectory)
-            .AddJsonFile("appsettings.json", optional = false, reloadOnChange = true)
-            .Build()
-
-    let args =
-        config.GetSection("args").GetChildren()
-            |> Seq.map (fun s -> s.Value)
-            |> Seq.toArray
-
     testAlior ()
 
-    testPGNIG args
+    testPGNIG ()
 
     testEnerga ()
 

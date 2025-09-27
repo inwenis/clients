@@ -19,7 +19,15 @@ type PGNiGClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest) 
         | None,   Some true  -> failwith "You can not be signed in if you don't give me a page"
         | None,   None       -> null, false
 
-    let args = args |> Option.defaultValue [||]
+    let args =
+        match args with
+        | Some a -> a
+        | None ->
+            [| // the default window run on my laptop is too small to display invoices without a scroll bar
+               // scraping invoices with a scrollbar fails in ScrapeInvoices()
+               "--force-device-scale-factor=0.5"
+               // the page asks to display notifications - the pop up it annoying so we block it
+               "--disable-notifications" |]
 
     let mutable signedIn = isSignedIn
     let mutable p: IPage = p

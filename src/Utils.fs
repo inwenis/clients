@@ -69,7 +69,7 @@ let queryFirst (p: IPage) xpath =
     p.QuerySelectorAsync xpath |> runSync
 
 let queryElementAll (e: IElementHandle) xpath =
-    printfn "queryAll \"%s\"" xpath
+    printfn "queryElementAll e \"%s\"" xpath
     e.QuerySelectorAllAsync xpath |> runSync
 
 let queryElementSingle (e: IElementHandle) xpath =
