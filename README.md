@@ -26,3 +26,5 @@ They are meant for debugging if the client encounters an error, for e.x. when th
 - unify if clients automatically login in or you have to do it explicitly
 - add a "keep being logged in background threat"
 - think if dumping page in Alior clients poses a security risk
+- make tests parallel and close windows after test
+    - parallel tests will require synchronizing printing output
