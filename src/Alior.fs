@@ -329,4 +329,6 @@ type AliorClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest) 
 
         member this.Dispose() =
             if p <> null then
+                click p "xpath///button[contains(text(),'Sign out')]"
+                waitTillHTMLRendered p
                 p.Dispose()
