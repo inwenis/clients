@@ -44,6 +44,8 @@ type PGNiGClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest) 
         dumpSnapshot p
         clickOrContinue p "xpath///i[contains(@class,'icon-close')]"
         sleep 1
+        click p "xpath///button[contains(text(),'Zaloguj loginem eBOK')]"
+        sleep 1
         dumpSnapshot p
         typet p "xpath///input[@name='identificator']" <| username ()
         typet p "xpath///input[@name='accessPin']"     <| password ()
