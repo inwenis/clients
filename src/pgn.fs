@@ -2,6 +2,7 @@ module PGNIG
 
 open PuppeteerSharp
 open Utils
+open System
 
 
 type InvoiceData = {
@@ -101,8 +102,8 @@ type PGNiGClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest) 
         clickOrContinue p "xpath///i[contains(@class,'icon-close')]"
         sleep 1
         dumpSnapshot p
+        typet p "xpath///input[@id='reading-0']" (indication |> string)
         if isTest |> not then
-            typet p "xpath///input[@id='reading-0']" (indication |> string)
             click p "xpath///button[contains(text(), 'Zapisz odczyt')]"
             click p "xpath///button[contains(text(), 'Tak')]"
             waitTillHTMLRendered p // make sure the input was accepted
@@ -110,7 +111,7 @@ type PGNiGClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest) 
             printfn "Skipping indication submission in test mode"
         dumpSnapshot p
 
-    member this.SubmitIndication indication =
+    member this.SubmitIndication (indication: int) =
         try
             this.SubmitIndicationInternal indication
         with e ->
@@ -166,3 +167,9 @@ type PGNiGClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest) 
             raise e
 
     member this.GetP() = p
+
+    interface IDisposable with
+
+        member this.Dispose() =
+            if p <> null then
+                p.Dispose()
