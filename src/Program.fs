@@ -10,13 +10,14 @@ open Alior
 
 let testAlior () =
     // immediately disposing should not throw
-    let c1 = new AliorClient(env "ALIOR_USERNAME", env "ALIOR_PASSWORD", isTest=true) :> IDisposable
-    c1.Dispose()
+    let c1 = new AliorClient(env "ALIOR_USERNAME", env "ALIOR_PASSWORD", isTest=true)
+    (c1 :> IDisposable).Dispose()
 
     // disposing twice should not throw
-    let c2 = new AliorClient(env "ALIOR_USERNAME", env "ALIOR_PASSWORD", isTest=true) :> IDisposable
-    c2.Dispose()
-    c2.Dispose()
+    let c2 = new AliorClient(env "ALIOR_USERNAME", env "ALIOR_PASSWORD", isTest=true)
+    c2.SignIn()
+    (c2 :> IDisposable).Dispose()
+    (c2 :> IDisposable).Dispose()
 
     use c = new AliorClient(env "ALIOR_USERNAME", env "ALIOR_PASSWORD", isTest=true)
     let dummyTaxTransfer = Transfers.Row("",    "asdf", "84101000712221000000000000", "2024/April", 123M, DateTimeOffset.UtcNow, "asdf", "asdf")

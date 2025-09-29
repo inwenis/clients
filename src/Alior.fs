@@ -56,6 +56,7 @@ type AliorClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest) 
 
     let mutable signedIn = isSignedIn
     let mutable p: IPage = p
+    let mutable disposed = false
 
     do downloadDefaultBrowser ()
 
@@ -328,7 +329,8 @@ type AliorClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest) 
     interface IDisposable with
 
         member this.Dispose() =
-            if p <> null then
+            if p <> null && disposed = false then
                 click p "xpath///button[contains(text(),'Sign out')]"
                 waitTillHTMLRendered p
                 p.Dispose()
+                disposed <- true
