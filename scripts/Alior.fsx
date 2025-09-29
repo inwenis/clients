@@ -21,7 +21,7 @@ open PuppeteerSharp
 open Utils
 open Alior
 
-let c = AliorClient(env "ALIOR_USERNAME", env "ALIOR_PASSWORD", isTest=true)
+let c = new AliorClient(env "ALIOR_USERNAME", env "ALIOR_PASSWORD", isTest=true)
 
 // #load "../src/Alior.fs"
 // open Alior

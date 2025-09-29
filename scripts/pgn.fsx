@@ -18,7 +18,7 @@ open PuppeteerSharp
 open Utils
 open PGNIG
 
-let c = PGNiGClient(env "PGNIG_USERNAME", env "PGNIG_PASSWORD")
+let c = new PGNiGClient(env "PGNIG_USERNAME", env "PGNIG_PASSWORD")
 c.SignIn()
 c.SubmitIndication 999999
 
@@ -26,3 +26,7 @@ c.SubmitIndication 999999
 // open PGNIG
 // let c = PGNiGClient(env "PGNIG_USERNAME", env "PGNIG_PASSWORD", page=c.GetP(), isSignedIn=false)
 // let c = PGNiGClient(env "PGNIG_USERNAME", env "PGNIG_PASSWORD", page=c.GetP(), isSignedIn=true)
+
+let p = c.GetP()
+
+p.Dispose()

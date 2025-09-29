@@ -113,3 +113,8 @@ type EnergaClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest)
             raise e
 
     member this.GetP() = p
+
+    interface IDisposable with
+
+        member this.Dispose() =
+            p.Dispose()

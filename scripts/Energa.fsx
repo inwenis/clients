@@ -18,7 +18,7 @@ open PuppeteerSharp
 open Utils
 open Energa
 
-let c = EnergaClient(env "ENERGA_USERNAME", env "ENERGA_PASSWORD", isTest=true)
+let c = new EnergaClient(env "ENERGA_USERNAME", env "ENERGA_PASSWORD", isTest=true)
 c.SignIn()
 c.SubmitIndication("105", 1234)
 

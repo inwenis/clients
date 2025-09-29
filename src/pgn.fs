@@ -2,6 +2,7 @@ module PGNIG
 
 open PuppeteerSharp
 open Utils
+open System
 
 
 type InvoiceData = {
@@ -166,3 +167,8 @@ type PGNiGClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest) 
             raise e
 
     member this.GetP() = p
+
+    interface IDisposable with
+
+        member this.Dispose() =
+            p.Dispose()
