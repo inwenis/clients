@@ -101,8 +101,8 @@ type PGNiGClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest) 
         clickOrContinue p "xpath///i[contains(@class,'icon-close')]"
         sleep 1
         dumpSnapshot p
+        typet p "xpath///input[@id='reading-0']" (indication |> string)
         if isTest |> not then
-            typet p "xpath///input[@id='reading-0']" (indication |> string)
             click p "xpath///button[contains(text(), 'Zapisz odczyt')]"
             click p "xpath///button[contains(text(), 'Tak')]"
             waitTillHTMLRendered p // make sure the input was accepted
