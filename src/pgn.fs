@@ -110,7 +110,7 @@ type PGNiGClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest) 
             printfn "Skipping indication submission in test mode"
         dumpSnapshot p
 
-    member this.SubmitIndication indication =
+    member this.SubmitIndication (indication: int) =
         try
             this.SubmitIndicationInternal indication
         with e ->
