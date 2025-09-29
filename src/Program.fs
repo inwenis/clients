@@ -48,8 +48,8 @@ let testEnerga () =
 let main _ =
     testAlior ()
 
-    // testPGNIG ()
+    testPGNIG ()
 
-    // testEnerga ()
+    testEnerga ()
 
     0
