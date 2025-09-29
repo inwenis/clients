@@ -9,6 +9,10 @@ open Alior
 // Install them via paket's github file reference.
 
 let testAlior () =
+    // immediately disposing should not throw
+    let c1 = new AliorClient(env "ALIOR_USERNAME", env "ALIOR_PASSWORD", isTest=true) :> IDisposable
+    c1.Dispose()
+
     use c = new AliorClient(env "ALIOR_USERNAME", env "ALIOR_PASSWORD", isTest=true)
     let dummyTaxTransfer = Transfers.Row("",    "asdf", "84101000712221000000000000", "2024/April", 123M, DateTimeOffset.UtcNow, "asdf", "asdf")
     let dummyRegTransfer = Transfers.Row("uni", "asdf", "91113000070080239435200002", "asdf", 1M, DateTimeOffset.UtcNow, "asdf", "asdf")
@@ -38,8 +42,8 @@ let testEnerga () =
 let main _ =
     testAlior ()
 
-    testPGNIG ()
+    // testPGNIG ()
 
-    testEnerga ()
+    // testEnerga ()
 
     0

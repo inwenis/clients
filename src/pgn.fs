@@ -171,4 +171,5 @@ type PGNiGClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest) 
     interface IDisposable with
 
         member this.Dispose() =
-            p.Dispose()
+            if p <> null then
+                p.Dispose()
