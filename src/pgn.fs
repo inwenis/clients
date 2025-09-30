@@ -57,9 +57,12 @@ type PGNiGClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest) 
         dumpSnapshot p
         signedIn <- true
 
-    let ScrapeInvoicesInternal () =
+    let scrapeInvoices count =
         // we rely on the index here because the list is rebuild and DOM nodes are detached
-        let invoice_indexes = queryAll p "xpath///div[contains(@class,'table-row')]" |> Array.mapi (fun i _ -> i)
+        let invoice_indexes =
+            queryAll p "xpath///div[contains(@class,'table-row')]"
+            |> Array.mapi (fun i _ -> i)
+            |> Array.truncate count
 
         let invoices = [
             for index in invoice_indexes do
@@ -118,10 +121,10 @@ type PGNiGClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest) 
             dumpSnapshot p
             raise e
 
-    member private this.ScrapeInvoicesInternal() =
+    member private this.ScrapeAndParse count =
         let getAllTexts (x: IElementHandle) = queryElementAll x "xpath/.//text()" |> Array.map getText
 
-        let parseInvoiceToStrings (before: IElementHandle array, after: IElementHandle array) =
+        let parse (before: IElementHandle array, after: IElementHandle array) =
             let before = before |> Array.collect getAllTexts |> Array.map (fun x -> x.Trim()) |> Array.filter (fun x -> x <> "")
             let after  = after  |> Array.collect getAllTexts |> Array.map (fun x -> x.Trim()) |> Array.filter (fun x -> x <> "")
             {
@@ -136,11 +139,12 @@ type PGNiGClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest) 
         clickOrContinue p "xpath///i[contains(@class,'icon-close')]"
         sleep 1
         dumpSnapshot p
-        ScrapeInvoicesInternal () |> List.map parseInvoiceToStrings
+        scrapeInvoices count |> List.map parse
 
-    member this.ScrapeInvoices() =
+    member this.ScrapeInvoices(?count) =
+        let count = count |> Option.defaultValue Int32.MaxValue
         try
-            this.ScrapeInvoicesInternal()
+            this.ScrapeAndParse count
         with e ->
             dumpSnapshot p
             raise e
