@@ -33,6 +33,9 @@ let testPGNIG () =
     use c = new PGNiGClient(env "PGNIG_USERNAME", env "PGNIG_PASSWORD", isTest=true)
     c.SignIn()
     c.SubmitIndication 123
+    // test scraping a single invoice
+    c.ScrapeInvoices 1 |> ignore
+    // test scraping all invoices
     c.ScrapeInvoices() |> ignore
     c.ScrapeOverpayments() |> ignore
     printfn "if we reached this line without errors all must be good!"
@@ -47,9 +50,6 @@ let testEnerga () =
 [<EntryPoint>]
 let main _ =
     testAlior ()
-
     testPGNIG ()
-
     testEnerga ()
-
     0
