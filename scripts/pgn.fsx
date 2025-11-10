@@ -18,7 +18,7 @@ open PuppeteerSharp
 open Utils
 open PGNIG
 
-let c = new PGNiGClient(env "PGNIG_USERNAME", env "PGNIG_PASSWORD")
+let c = new PGNiGClient(env "PGNIG_USERNAME", env "PGNIG_PASSWORD", isTest=true)
 c.SignIn()
 c.SubmitIndication 999999
 
@@ -28,5 +28,7 @@ c.SubmitIndication 999999
 // let c = PGNiGClient(env "PGNIG_USERNAME", env "PGNIG_PASSWORD", page=c.GetP(), isSignedIn=true)
 
 let p = c.GetP()
+
+// clickOrContinue p "xpath///i[contains(@class,'icon-close')]"
 
 p.Dispose()

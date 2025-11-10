@@ -102,6 +102,10 @@ type PGNiGClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest) 
         goto p "https://ebok.pgnig.pl/odczyt"
         waitTillHTMLRendered p
         dumpSnapshot p
+        // close "orlen id pop-up" if it appears
+        clickOrContinue p "xpath///i[contains(@class,'icon-close')]"
+        sleep 1
+        // close "e-invoice pop-up" if it appears
         clickOrContinue p "xpath///i[contains(@class,'icon-close')]"
         sleep 1
         dumpSnapshot p
