@@ -130,7 +130,10 @@ type AliorClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest) 
             if confirmInternalTransferButton <> null then
                 clickElement confirmInternalTransferButton
 
-            waitSelector p "xpath///*[contains(text(),'Domestic transfer submitted.')]"
+            // The saved HTML dump shows Alior can report a submitted transfer
+            // as "The transfer is pending" when they are carrying out system
+            // work or verifying the transfer and may call to confirm it.
+            waitSelector p "xpath///*[contains(.,'Domestic transfer submitted.') or contains(.,'The transfer is pending')]"
             |> ignore
 
             sleep 2
