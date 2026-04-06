@@ -130,6 +130,16 @@ let waitTillHTMLRendered (page: IPage) =
 
 let env name = fun _ -> Environment.GetEnvironmentVariable(name)
 
+let readRequiredCredential owner credentialName (reader: unit -> string) =
+    if isNull (box reader) then
+        nullArg credentialName
+
+    let value = reader ()
+    if String.IsNullOrWhiteSpace value then
+        invalidArg credentialName $"{owner} requires {credentialName} to be provided"
+
+    value
+
 let downloadDefaultBrowser () =
     let fetcher = new BrowserFetcher()
 

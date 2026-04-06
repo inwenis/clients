@@ -57,14 +57,20 @@ type AliorClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest) 
     let mutable signedIn = isSignedIn
     let mutable p: IPage = p
     let mutable disposed = false
+    let usernameValue, passwordValue =
+        if isSignedIn then
+            None, None
+        else
+            Some (readRequiredCredential "AliorClient" "username" username),
+            Some (readRequiredCredential "AliorClient" "password" password)
 
     do downloadDefaultBrowser ()
 
     let signInInternal () =
         gotoWithCustomTimeOut p "https://system.aliorbank.pl/sign-in" (60 * 1000)
-        typet p "xpath///input[@id='login']" <| username ()
+        typet p "xpath///input[@id='login']" usernameValue.Value
         click p "xpath///button[@title='Next']"
-        typet p "xpath///input[@id='password']" <| password ()
+        typet p "xpath///input[@id='password']" passwordValue.Value
         click p "xpath///button[@id='password-submit']"
         click p "xpath///button[contains(text(),'One-time access')]"
         waitSelector p "xpath///*[contains(text(),'My wallet')]" |> ignore // we wait for the main page to load after logging in

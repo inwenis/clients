@@ -32,6 +32,12 @@ type PGNiGClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest) 
 
     let mutable signedIn = isSignedIn
     let mutable p: IPage = p
+    let usernameValue, passwordValue =
+        if isSignedIn then
+            None, None
+        else
+            Some (readRequiredCredential "PGNiGClient" "username" username),
+            Some (readRequiredCredential "PGNiGClient" "password" password)
 
     do downloadDefaultBrowser ()
 
@@ -48,8 +54,8 @@ type PGNiGClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest) 
         click p "xpath///button[contains(text(),'Zaloguj loginem eBOK')]"
         sleep 1
         dumpSnapshot p
-        typet p "xpath///input[@name='identificator']" <| username ()
-        typet p "xpath///input[@name='accessPin']"     <| password ()
+        typet p "xpath///input[@name='identificator']" usernameValue.Value
+        typet p "xpath///input[@name='accessPin']"     passwordValue.Value
         let w = p.WaitForNetworkIdleAsync()
         sleep 1 // I have experienced that without waiting here clicking the "submit" button has no effect
         click p "xpath///button[@type='submit']"

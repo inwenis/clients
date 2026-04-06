@@ -21,6 +21,12 @@ type EnergaClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest)
 
     let mutable signedIn = isSignedIn
     let mutable p: IPage = p
+    let usernameValue, passwordValue =
+        if isSignedIn then
+            None, None
+        else
+            Some (readRequiredCredential "EnergaClient" "username" username),
+            Some (readRequiredCredential "EnergaClient" "password" password)
 
     do downloadDefaultBrowser ()
 
@@ -31,8 +37,8 @@ type EnergaClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest)
         dumpSnapshot p
         click p "xpath///span[@data-translate='Login.continueWithE24']"
         waitTillHTMLRendered p
-        typet p "xpath///input[@name='username']" <| username ()
-        typet p "xpath///input[@name='password']" <| password ()
+        typet p "xpath///input[@name='username']" usernameValue.Value
+        typet p "xpath///input[@name='password']" passwordValue.Value
         let w = p.WaitForNetworkIdleAsync()
         click p "xpath///button[@name='login']"
         w |> wait
