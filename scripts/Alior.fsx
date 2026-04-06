@@ -25,7 +25,7 @@ let c = new AliorClient(env "ALIOR_USERNAME", env "ALIOR_PASSWORD", isTest=true)
 
 // #load "../src/Alior.fs"
 // open Alior
-// let c = AliorClient(env "ALIOR_USERNAME", env "ALIOR_PASSWORD", page = p, isTest=true)
+// let c = new AliorClient(env "ALIOR_USERNAME", env "ALIOR_PASSWORD", page = p, isTest=true)
 
 let taxOfficeName = "Drugi Mazowiecki Urząd Skarbowy Warszawa"
 let transferTax = Transfers.Row("", "asdf", "84101000712221000000000000", "2024/April", 123M, DateTimeOffset.UtcNow,  "asdf", "asdf")
@@ -35,5 +35,5 @@ c.SignIn()
 
 c.TransferRegular(transferReg)
 
-c.Scrape(period=All)
+c.Scrape(period=All, productsCount=1)
 let p = c.GetP()

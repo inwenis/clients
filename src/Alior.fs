@@ -5,6 +5,7 @@ open Utils
 open System.IO
 open System
 open System.Text
+open System.Globalization
 open FSharp.Data
 
 
@@ -222,7 +223,7 @@ type AliorClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest) 
             dumpSnapshot p
             raise e
 
-    member private this.ScrapeInternal(?destination, ?period, ?count) =
+    member private this.ScrapeInternal(?destination, ?period, ?productsCount) =
         let dest = destination |> Option.defaultValue DEFAULT_DESTINATION
 
         let period =
@@ -233,7 +234,7 @@ type AliorClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest) 
             | None -> LastYear
 
         let count =
-            match count with
+            match productsCount with
             | Some x -> x
             | None -> 100 // by default set count to 100 meaning we scrape all products
 
@@ -254,13 +255,8 @@ type AliorClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest) 
         | LastYear -> click p "xpath///*[contains(text(),'Last year')]"
         | OtherRange(from, _to) ->
             click p "xpath///*[contains(text(),'Other date range')]"
-            // We need to type something first, otherwise the actual date won't be typed hence we type "0".
-            // When setting dates with `document.querySelector("input[#date-from").value = '...' the form claims dates are invalid.
-            // The format of dates depends on Windows's ShortDate format - hence we use .ToShortDateString() and remove all non-digit characters.
-            typeSlow p "xpath///input[@id='date-from']" "0"
-            typeSlow p "xpath///input[@id='date-from']" (from.ToShortDateString() |> regexRemove "\D")
-            typeSlow p "xpath///input[@id='date-to']" "0"
-            typeSlow p "xpath///input[@id='date-to']" (_to.ToShortDateString() |> regexRemove "\D")
+            typeSlow p "xpath///input[@id='dateFrom']" (from.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture))
+            typeSlow p "xpath///input[@id='dateTo']"   (_to.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture))
         | _ -> failwith "Not implemented"
 
         // click File type
@@ -327,9 +323,9 @@ type AliorClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest) 
 
         destinationFiles
 
-    member this.Scrape(?destination, ?period, ?count) =
+    member this.Scrape(?destination, ?period, ?productsCount) =
         try
-            this.ScrapeInternal(?destination = destination, ?period = period, ?count = count)
+            this.ScrapeInternal(?destination = destination, ?period = period, ?productsCount = productsCount)
         with e ->
             dumpSnapshot p
             raise e

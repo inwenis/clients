@@ -23,7 +23,7 @@ let testAlior () =
     let dummyTaxTransfer = Transfers.Row("",    "asdf", "84101000712221000000000000", "2024/April", 123M, DateTimeOffset.UtcNow, "asdf", "asdf")
     let dummyRegTransfer = Transfers.Row("uni", "asdf", "91113000070080239435200002", "asdf", 1M, DateTimeOffset.UtcNow, "asdf", "asdf")
     c.SignIn()
-    c.Scrape(count=1) |> ignore
+    c.Scrape(productsCount=1) |> ignore
     c.GetP() |> ignore
     c.TransferTax(dummyTaxTransfer, "Pierwszy Urząd Skarbowy Warszawa")
     c.TransferRegular dummyRegTransfer
