@@ -17,8 +17,6 @@ Billing account name is long to align      ,Receiver2   ,12 1234 1234 12,Title o
 """>
 
 
-let ALIOR_ENCODING = CodePagesEncodingProvider.Instance.GetEncoding 1250
-
 type ScrapePeriod =
     | LastYear
     | All
@@ -317,9 +315,7 @@ type AliorClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest) 
             |> List.map (fun x -> Path.Combine(dest, x.Name))
 
         for src, dest in List.zip sourceFiles destinationFiles do
-            // save the files encoded as UTF-8 because I can't stand working with files encoded as Windows-1250
-            let text = File.ReadAllText(src.FullName, ALIOR_ENCODING)
-            File.WriteAllText(dest, text, Encoding.UTF8)
+            File.Move(src.FullName, dest)
 
         destinationFiles
 

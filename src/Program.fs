@@ -50,6 +50,6 @@ let testEnerga () =
 [<EntryPoint>]
 let main _ =
     testAlior ()
-    testPGNIG ()
-    testEnerga ()
+    // testPGNIG ()
+    // testEnerga ()
     0
