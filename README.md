@@ -6,6 +6,47 @@ This repo contains clients I use to automate settling utilities.
 
 The clients are meant to be referenced via paket's [GitHub dependencies](https://fsprojects.github.io/Paket/github-dependencies.html) and used in an FSI (.fsx) environment.
 
+# Sample usage
+
+```pwsh
+mkdir myFirstProj
+cd myFirstProj
+mkdir src
+dotnet new console -lang f#
+mv Program.fs src/Program.fs
+mv myFirstProj.fsproj src/myFirstProj.fsproj
+dotnet new tool-manifest
+dotnet tool install paket
+dotnet tool restore
+dotnet paket init
+dotnet paket add FSharp.Data    --project .\src\myFirstProj.fsproj
+dotnet paket add PuppeteerSharp --project .\src\myFirstProj.fsproj
+
+""                                           >> paket.dependencies
+"github inwenis/clients src/Utils.fs"        >> paket.dependencies
+"github inwenis/clients src/AliorParsing.fs" >> paket.dependencies
+
+""                                           >> src/paket.references
+"File:Utils.fs"                              >> src/paket.references
+"File:AliorParsing.fs"                       >> src/paket.references
+
+dotnet paket install
+dotnet paket restore
+
+"#r `"nuget: FSharp.Data, 6.4.0`""                                                                >> src/script.fsx
+"#r `"nuget: PuppeteerSharp, 20.2.2`""                                                            >> src/script.fsx
+""                                                                                                >> src/script.fsx
+"#load `"../paket-files/inwenis/clients/src/Utils.fs`""                                           >> src/script.fsx
+"#load `"../paket-files/inwenis/clients/src/AliorParsing.fs`""                                    >> src/script.fsx
+""                                                                                                >> src/script.fsx
+"open AliorParsing"                                                                               >> src/script.fsx
+""                                                                                                >> src/script.fsx
+"let rows = parseFiles [@`"C:\Users\inwen\Downloads\Historia_Operacji_2026-05-20_12-55-38.csv`"]" >> src/script.fsx
+
+dotnet fsi src/script.fsx
+
+```
+
 # Snapshots
 
 The clients occasionally save snapshots to `./snapshots/page_{timestamp}.mhtml`.
