@@ -46,7 +46,7 @@ type PGNiGClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest) 
         goto p "https://ebok.pgnig.pl/"
         w |> wait
         dumpSnapshot p
-        click p "xpath///button[text()='Odrzuć wszystkie']"
+        clickOrContinue p "xpath///button[text()='Odrzuć wszystkie']"
         sleep 1
         dumpSnapshot p
         clickOrContinue p "xpath///i[contains(@class,'icon-close')]"
