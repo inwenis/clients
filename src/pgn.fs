@@ -42,9 +42,8 @@ type PGNiGClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest) 
     do downloadDefaultBrowser ()
 
     let signInInternal () =
-        let w = p.WaitForNetworkIdleAsync()
         goto p "https://ebok.pgnig.pl/"
-        //w |> wait
+        waitTillHTMLRendered p
         dumpSnapshot p
         clickOrContinue p "xpath///button[text()='Odrzuć wszystkie']"
         sleep 1
@@ -56,11 +55,10 @@ type PGNiGClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest) 
         dumpSnapshot p
         typet p "xpath///input[@name='identificator']" usernameValue.Value
         typet p "xpath///input[@name='accessPin']"     passwordValue.Value
-        let w = p.WaitForNetworkIdleAsync()
         sleep 1 // I have experienced that without waiting here clicking the "submit" button has no effect
         click p "xpath///button[@type='submit']"
-        //w |> wait
-        //dumpSnapshot p
+        waitTillHTMLRendered p
+        dumpSnapshot p
         signedIn <- true
 
     let scrapeInvoices count =
