@@ -31,17 +31,15 @@ type EnergaClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest)
     do downloadDefaultBrowser ()
 
     let signInInternal () =
-        let w = p.WaitForNetworkIdleAsync()
         goto p "https://www.24.energa.pl/"
-        w |> wait
+        waitTillHTMLRendered p
         dumpSnapshot p
         click p "xpath///span[@data-translate='Login.continueWithE24']"
         waitTillHTMLRendered p
         typet p "xpath///input[@name='username']" usernameValue.Value
         typet p "xpath///input[@name='password']" passwordValue.Value
-        let w = p.WaitForNetworkIdleAsync()
         click p "xpath///button[@name='login']"
-        w |> wait
+        waitTillHTMLRendered p
         dumpSnapshot p
         signedIn <- true
 
