@@ -88,7 +88,7 @@ type EnergaClient(username, password, ?args, ?page: IPage, ?isSignedIn, ?isTest)
             let amountText = queryFirst p "xpath///*[contains(text(), 'Kwota do zapłaty')]" |> getText
             let amount =
                 amountText
-                |> regexRemove "JSHandle:Kwota do zapłaty:"
+                |> regexRemove "Kwota do zapłaty:"
                 |> regexRemove "zł"
                 |> regexReplace "," "."
                 |> decimal
