@@ -81,7 +81,10 @@ let waitSelector (p: IPage) xpath =
     p.WaitForSelectorAsync xpath |> runSync
 
 let getText (e: IElementHandle) =
-    e.GetPropertyAsync("textContent").Result |> string
+    // GetPropertyAsync returns an IJSHandle; `|> string` would yield its ToString()
+    // which is "JSHandle:<value>" - poisoning every text comparison. JsonValueAsync
+    // unwraps the handle to the actual textContent string.
+    e.GetPropertyAsync("textContent").Result.JsonValueAsync<string>().Result
 
 let getAttributeNames = fun (d:IElementHandle) -> d.EvaluateFunctionAsync<string[]> "node => Array.from(node.attributes).map(x => x.name)" |> runSync
 let getAttributeValue = fun name (d:IElementHandle) -> d.EvaluateFunctionAsync<string> $"node => node.getAttribute('{name}')" |> runSync
