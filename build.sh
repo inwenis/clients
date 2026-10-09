@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Check .fsx nuget pins against paket.lock, then dotnet build; logic in build.ps1.
+# Build the solution; dotnet build restores the packages.
 set -euo pipefail
 cd "$(dirname "$0")"
-exec pwsh -NoProfile -File ./build.ps1 "$@"
+exec dotnet build "$@"

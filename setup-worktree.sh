@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
-# Restore the dotnet tools (paket, fantomas) and the paket packages for this worktree.
+# Restore the dotnet tools (paket and fantomas); build.sh restores the packages.
 set -euo pipefail
 cd "$(dirname "$0")"
 dotnet tool restore
-dotnet paket restore "$@"

@@ -1,3 +1,5 @@
 #!/usr/bin/env bash
-# No tests, no CI workflow, no lint config in this repo.
-echo "script empty on purpose, nothing needs to be done"
+# Check that the .fsx nuget pins match paket.lock.
+set -euo pipefail
+cd "$(dirname "$0")"
+exec pwsh -NoProfile -File ./tools/version-fsx-check.ps1
